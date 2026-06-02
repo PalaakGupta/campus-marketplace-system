@@ -1,0 +1,33 @@
+/* Wrapper and Layout */
+.login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #1e3c72, #2a5298); font-family: system-ui, -apple-system, sans-serif; }
+
+/* Dynamic Glow Shadows */
+.login-container { background: #ffffff; padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; transition: box-shadow 0.4s ease, transform 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+.login-container.success { box-shadow: 0 0 25px 5px rgba(46, 204, 113, 0.7); transform: scale(1.01); }
+.login-container.error { box-shadow: 0 0 25px 5px rgba(231, 76, 60, 0.7); transform: scale(0.99); }
+
+/* Typography & Visuals */
+.marketplace-logo { font-size: 3rem; margin-bottom: 10px; }
+h2 { margin: 0 0 5px 0; color: #1e3c72; font-size: 1.8rem; }
+.subtitle { color: #666; font-size: 0.9rem; margin-bottom: 25px; }
+
+/* Custom Form Window Messages */
+.window-message { padding: 12px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; text-align: left; animation: fadeIn 0.3s ease; }
+.success-message { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+.error-message { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+
+/* Input Fields */
+.input-group { margin-bottom: 20px; text-align: left; }
+.input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 6px; }
+.input-group input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s; }
+.input-group input:focus { border-color: #2a5298; outline: none; }
+
+/* Button & Links */
+.login-button { width: 100%; padding: 14px; background-color: #1e3c72; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+.login-button:hover { background-color: #2a5298; }
+.form-footer { margin-top: 25px; font-size: 0.85rem; }
+.form-footer a { color: #1e3c72; text-decoration: none; font-weight: 500; }
+.form-footer a:hover { text-decoration: underline; }
+.form-footer span { color: #ccc; margin: 0 8px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
