@@ -1,7 +1,10 @@
+# Python Virtual Environment
 **/venv/
 **/__pycache__/
+# React / Node Modules
 **/node_modules/
 dist/
+# Databases & OS
 .env
 *.log
 .DS_Store
