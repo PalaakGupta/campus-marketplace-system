@@ -1,0 +1,202 @@
+/* ── Grid Card ── */
+.item-card--grid {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-card__image-wrap {
+  position: relative;
+  padding-top: 75%;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.item-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.item-card--grid:hover .item-card__image {
+  transform: scale(1.03);
+}
+
+.item-card__image-placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
+}
+
+.item-card__badges-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.item-card__save {
+  color: var(--color-text-sec);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition);
+}
+.item-card__save--overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.item-card__save--active {
+  color: var(--color-red);
+}
+.item-card__save--active svg {
+  fill: var(--color-red);
+}
+
+.item-card__thrift-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+}
+
+.item-card__body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.item-card__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp:2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.item-card__price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-card__price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-dark-blue);
+  letter-spacing: -0.3px;
+}
+
+.item-card__condition {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  background: var(--color-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+
+.item-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.item-card__seller-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.item-card__seller {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.item-card__verified {
+  color: var(--color-blue);
+  flex-shrink: 0;
+}
+
+.item-card__views {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-text-sec);
+  flex-shrink: 0;
+}
+
+/* ── List Card ── */
+.item-card--list {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  gap: 12px;
+}
+
+.item-card__list-image-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+.item-card__list-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-card__list-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card__list-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.item-card__dot {
+  color: var(--color-border);
+  font-size: 12px;
+}
