@@ -1,0 +1,37 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge--sm { font-size: 10px; padding: 3px 8px; }
+.status-badge--md { font-size: 12px; padding: 4px 10px; }
+.status-badge--lg { font-size: 13px; padding: 5px 12px; }
+
+.badge--available {
+  background: var(--color-green-soft);
+  color: var(--color-green-text);
+}
+.badge--reserved {
+  background: var(--color-orange-soft);
+  color: var(--color-orange-text);
+}
+.badge--sold {
+  background: var(--color-gray-soft);
+  color: var(--color-text-sec);
+}
+.badge--holding {
+  background: var(--color-orange-soft);
+  color: var(--color-orange-text);
+}
+.badge--released {
+  background: var(--color-green-soft);
+  color: var(--color-green-text);
+}
+.badge--refunded {
+  background: var(--color-red-soft);
+  color: var(--color-red-text);
+}
