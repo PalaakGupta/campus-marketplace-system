@@ -1,0 +1,224 @@
+.dashboard {
+  min-height: 100vh;
+}
+
+/* Banner */
+.dashboard__banner {
+  background: linear-gradient(135deg, var(--color-dark-blue), var(--color-blue));
+  padding: 20px 16px 32px;
+}
+
+.dashboard__banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.dashboard__greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard__greeting-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.dashboard__greeting-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dashboard__notif-btn {
+  color: #fff;
+  position: relative;
+}
+
+/* Body */
+.dashboard__body {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats */
+.dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dashboard__stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 16px 10px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.dashboard__stat-card:hover { transform: translateY(-2px); }
+
+.dashboard__stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.dashboard__stat-label {
+  font-size: 10px;
+  color: var(--color-text-sec);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Section */
+.dashboard__section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Purchase card */
+.dashboard__purchase-card {
+  overflow: hidden;
+}
+
+.dashboard__purchase-body {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.dashboard__purchase-image-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+.dashboard__purchase-image,
+.dashboard__purchase-image-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dashboard__purchase-image-placeholder {
+  background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
+}
+
+.dashboard__purchase-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard__purchase-title {
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard__purchase-seller {
+  font-size: 12px;
+  color: var(--color-text-sec);
+}
+
+.dashboard__purchase-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.dashboard__purchase-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-dark-blue);
+}
+
+.dashboard__purchase-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: var(--color-orange-soft);
+  border-top: 1px solid #fde68a;
+  color: var(--color-orange-text);
+}
+
+.dashboard__purchase-action-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-orange-dark);
+}
+
+/* Items grid */
+.dashboard__items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .dashboard__items-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard__items-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Activity */
+.dashboard__activity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+}
+
+.dashboard__activity-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 18px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background var(--transition);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+}
+.dashboard__activity-item:last-child { border-right: none; }
+.dashboard__activity-item:hover { background: var(--color-bg); }
+
+.dashboard__activity-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.dashboard__activity-label {
+  font-size: 10px;
+  color: var(--color-text-sec);
+  font-weight: 500;
+  line-height: 1.3;
+}
+

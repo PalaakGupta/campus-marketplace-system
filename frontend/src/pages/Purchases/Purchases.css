@@ -1,0 +1,133 @@
+.purchases { min-height: 100vh; }
+
+.purchases__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.purchases__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Card */
+.purchases__card {
+  overflow: hidden;
+}
+
+.purchases__card-body {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.purchases__card-body:hover { background: var(--color-bg); }
+
+.purchases__image-wrap {
+  width: 66px;
+  height: 66px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+.purchases__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.purchases__image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
+}
+
+.purchases__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.purchases__item-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.purchases__item-seller {
+  font-size: 12px;
+  color: var(--color-text-sec);
+}
+
+.purchases__item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.purchases__price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-dark-blue);
+}
+
+/* Timeline section */
+.purchases__timeline-wrap {
+  padding: 14px 20px;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Status bars */
+.purchases__confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: var(--color-orange-soft);
+  border-top: 1px solid #fde68a;
+  color: var(--color-orange-text);
+}
+
+.purchases__confirm-text {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-orange-dark);
+}
+
+.purchases__released-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  background: var(--color-green-soft);
+  border-top: 1px solid #a7f3d0;
+  color: var(--color-green-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.purchases__refunded-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  background: var(--color-blue-soft);
+  border-top: 1px solid var(--color-blue-mid);
+  color: var(--color-blue);
+  font-size: 12px;
+  font-weight: 600;
+}
