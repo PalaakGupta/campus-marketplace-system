@@ -1,0 +1,126 @@
+.messages { min-height: 100vh; }
+
+.messages__body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.messages__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Conversation button */
+.messages__convo-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.messages__convo-btn:hover { background: var(--color-bg); }
+
+.messages__convo-btn--unread {
+  border-color: var(--color-blue);
+  background: var(--color-blue-soft);
+}
+.messages__convo-btn--unread:hover { background: #dbeafe; }
+
+/* Avatar */
+.messages__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.messages__online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-green);
+  border: 2px solid var(--color-card);
+}
+
+/* Convo Info */
+.messages__convo-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.messages__convo-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.messages__convo-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.messages__convo-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.messages__convo-role {
+  font-size: 11px;
+  color: var(--color-text-sec);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.messages__convo-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.messages__convo-time {
+  font-size: 11px;
+  color: var(--color-text-sec);
+}
+
+.messages__unread-badge {
+  font-size: 10px;
+  min-width: 18px;
+  height: 18px;
+}
+
+.messages__convo-preview {
+  font-size: 12px;
+  color: var(--color-text-sec);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messages__convo-listing {
+  font-weight: 600;
+  color: var(--color-text);
+}
