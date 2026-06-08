@@ -1,0 +1,51 @@
+:root {
+  --color-dark-blue: #1e3c72;
+  --color-blue: #2a5298;
+  --color-blue-soft: #eff6ff;
+  --color-blue-mid: #dbeafe;
+
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+
+  --color-text: #1f2937;
+  --color-text-sec: #6b7280;
+  --color-text-hint: #9ca3af;
+
+  --color-border: #e5e7eb;
+  --color-border-focus: #2a5298;
+
+  --color-green: #10b981;
+  --color-green-soft: #ecfdf5;
+  --color-green-text: #059669;
+
+  --color-orange: #f59e0b;
+  --color-orange-soft: #fffbeb;
+  --color-orange-text: #d97706;
+  --color-orange-dark: #92400e;
+
+  --color-red: #ef4444;
+  --color-red-soft: #fef2f2;
+  --color-red-text: #dc2626;
+  --color-red-dark: #991b1b;
+
+  --color-gray-soft: #f3f4f6;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 50px;
+
+  --shadow: 0 10px 25px rgba(30, 60, 114, 0.08);
+  --shadow-sm: 0 4px 12px rgba(30, 60, 114, 0.06);
+  --shadow-md: 0 8px 24px rgba(30, 60, 114, 0.12);
+  --shadow-blue: 0 8px 20px rgba(42, 82, 152, 0.35);
+
+  --sidebar-width: 240px;
+  --bottom-nav-height: 68px;
+  --header-height: 64px;
+
+  --transition: 0.2s ease;
+  --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
