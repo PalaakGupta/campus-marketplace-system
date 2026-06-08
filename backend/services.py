@@ -2,42 +2,53 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from decimal import Decimal
 from fastapi import HTTPException, status
-
+from auth import hash_password, verify_password, default_password
 import models
 import schemas
 from logger import get_logger
+import os
 
 logger = get_logger(__name__)
 
 # USER SERVICES
 
+
+
+
 def create_user(db: Session, payload: schemas.UserCreate) -> models.User:
     """
-    Create a new user and automatically provision their wallet.
-    Every user gets a wallet the moment they register.
+    Admin-only. Creates a student account.
+    Default password is derived from date of birth.
     """
-    existing = db.query(models.User).filter(
+    existing_email = db.query(models.User).filter(
         models.User.email == payload.email
     ).first()
-
-    if existing:
-        logger.warning(f"Registration attempt with duplicate email: {payload.email}")
+    if existing_email:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="A user with this email already exists."
         )
 
-    # In production you would use bcrypt here.
-    # We store a placeholder hash for now.
-    fake_hash = f"hashed_{payload.password}"
+    existing_roll = db.query(models.User).filter(
+        models.User.roll_number == payload.roll_number
+    ).first()
+    if existing_roll:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this roll number already exists."
+        )
+
+    raw_password = default_password(payload.date_of_birth)
 
     user = models.User(
+        roll_number   = payload.roll_number,
         name          = payload.name,
         email         = payload.email,
-        password_hash = fake_hash
+        password_hash = hash_password(raw_password),
+        role          = payload.role
     )
     db.add(user)
-    db.flush()  # Assigns user.id without committing yet
+    db.flush()
 
     wallet = models.Wallet(
         user_id = user.id,
@@ -47,9 +58,67 @@ def create_user(db: Session, payload: schemas.UserCreate) -> models.User:
     db.commit()
     db.refresh(user)
 
-    logger.info(f"New user created: id={user.id} email={user.email}")
+    logger.info(
+        f"User created by admin: id={user.id} "
+        f"roll={user.roll_number} role={user.role}"
+    )
     return user
 
+
+def login(db: Session, payload: schemas.LoginRequest) -> dict:
+    """
+    Student logs in with roll number and password.
+    """
+    user = db.query(models.User).filter(
+        models.User.roll_number == payload.roll_number
+    ).first()
+
+    if not user or not verify_password(payload.password, user.password_hash):
+        logger.warning(
+            f"Failed login attempt: roll_number={payload.roll_number}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid roll number or password."
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Contact admin."
+        )
+
+    logger.info(f"Login successful: user_id={user.id} roll={user.roll_number}")
+    return {
+        "message"     : "Login successful.",
+        "user_id"     : user.id,
+        "roll_number" : user.roll_number,
+        "name"        : user.name,
+        "role"        : user.role
+    }
+
+
+def change_password(
+    db: Session,
+    payload: schemas.ChangePasswordRequest
+) -> dict:
+    """
+    Student changes their own password.
+    Must verify old password first.
+    """
+    user = get_user_by_id(db, payload.user_id)
+
+    if not verify_password(payload.old_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Old password is incorrect."
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+
+    logger.info(f"Password changed: user_id={user.id}")
+    return {"message": "Password changed successfully."}
 
 def get_user_by_id(db: Session, user_id: int) -> models.User:
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -469,3 +538,43 @@ def get_chat_history(
     return db.query(models.Message).filter(
         models.Message.item_id == item_id
     ).order_by(models.Message.created_at.asc()).all()
+
+
+
+def sync_wallet_from_card(db: Session, user_id: int) -> models.Wallet:
+    """
+    Syncs wallet balance from the campus card system.
+    In production, replace the mock with a real card API call.
+    """
+    wallet = get_wallet(db, user_id)
+
+    # ── REPLACE THIS BLOCK when the real card API is available ──
+    import httpx
+    CARD_API_URL = os.getenv("CARD_API_URL", "")
+
+    if CARD_API_URL:
+        response = httpx.get(
+            f"{CARD_API_URL}/balance",
+            params={"user_id": user_id},
+            timeout=5.0
+        )
+        response.raise_for_status()
+        card_balance = Decimal(str(response.json()["balance"]))
+    else:
+        # Mock balance for development — remove in production
+        card_balance = Decimal("1000.00")
+        logger.warning(
+            f"CARD_API_URL not set — using mock balance "
+            f"for user_id={user_id}"
+        )
+    # ── END REPLACE BLOCK ──
+
+    wallet.balance = card_balance
+    db.commit()
+    db.refresh(wallet)
+
+    logger.info(
+        f"Wallet synced from card: user_id={user_id} "
+        f"balance={wallet.balance}"
+    )
+    return wallet

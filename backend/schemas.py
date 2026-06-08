@@ -3,6 +3,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from datetime import datetime, date
 
 
 # Enums (mirrored from models.py for API validation)
@@ -32,19 +33,49 @@ class TransactionType(str, Enum):
 
 # USER SCHEMAS
 
-class UserBase(BaseModel):
-    name:  str        = Field(..., min_length=2, max_length=100)
-    email: EmailStr
+class UserRole(str, Enum):
+    admin   = "admin"
+    student = "student"
 
 
-class UserCreate(UserBase):
-    password: str     = Field(..., min_length=6, max_length=100)
+# Admin uses this to create a student account
+class UserCreate(BaseModel):
+    roll_number:   str  = Field(..., min_length=2, max_length=50)
+    name:          str  = Field(..., min_length=2, max_length=100)
+    email:         EmailStr
+    date_of_birth: date  # Default password derived from this
+    role:          UserRole = Field(default=UserRole.student)
 
 
-class UserResponse(UserBase):
-    id:         int
-    is_active:  bool
-    created_at: datetime
+# Student uses this to log in
+class LoginRequest(BaseModel):
+    roll_number: str = Field(..., min_length=2, max_length=50)
+    password:    str = Field(..., min_length=6)
+
+
+class LoginResponse(BaseModel):
+    message:     str
+    user_id:     int
+    roll_number: str
+    name:        str
+    role:        UserRole
+
+
+# Student uses this to change their own password
+class ChangePasswordRequest(BaseModel):
+    user_id:      int = Field(..., gt=0)
+    old_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6)
+
+
+class UserResponse(BaseModel):
+    id:          int
+    roll_number: str
+    name:        str
+    email:       EmailStr
+    role:        UserRole
+    is_active:   bool
+    created_at:  datetime
 
     class Config:
         from_attributes = True

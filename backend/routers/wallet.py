@@ -24,13 +24,12 @@ def get_wallet(
 
 
 @router.post(
-    "/{user_id}/topup",
+    "/{user_id}/sync",
     response_model=schemas.WalletResponse,
-    summary="Add tokens to a user wallet"
+    summary="Sync wallet balance from campus card"
 )
-def topup_wallet(
+def sync_wallet(
     user_id: int,
-    payload: schemas.WalletTopUp,
     db: Session = Depends(get_db)
 ):
-    return services.topup_wallet(db, user_id, payload)
+    return services.sync_wallet_from_card(db, user_id)

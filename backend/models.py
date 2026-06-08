@@ -32,12 +32,18 @@ class TransactionType(str, enum.Enum):
     release  = "release"
     refund   = "refund"
 
+class UserRole(str, enum.Enum):
+    admin   = "admin"
+    student = "student"
+
 # MODEL: User
 
 class User(Base):
     __tablename__ = "users"
 
     id            = Column(Integer, primary_key=True, index=True)
+    roll_number = Column(String(50), nullable=False, unique=True, index=True)
+    role        = Column(Enum(UserRole), nullable=False, default=UserRole.student)
     name          = Column(String(100), nullable=False)
     email         = Column(String(150), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=False)
