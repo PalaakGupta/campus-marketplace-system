@@ -1,0 +1,48 @@
+.security-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid;
+}
+
+.security-card--info {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-color: #bfdbfe;
+}
+.security-card--info .security-card__icon-wrap { color: var(--color-blue); }
+.security-card--info .security-card__title     { color: var(--color-dark-blue); }
+.security-card--info .security-card__message   { color: #3b82f6; }
+
+.security-card--warning {
+  background: var(--color-orange-soft);
+  border-color: #fde68a;
+}
+.security-card--warning .security-card__icon-wrap { color: var(--color-orange-text); }
+.security-card--warning .security-card__title     { color: var(--color-orange-dark); }
+.security-card--warning .security-card__message   { color: #a16207; }
+
+.security-card--success {
+  background: var(--color-green-soft);
+  border-color: #a7f3d0;
+}
+.security-card--success .security-card__icon-wrap { color: var(--color-green-text); }
+.security-card--success .security-card__title     { color: #065f46; }
+.security-card--success .security-card__message   { color: #059669; }
+
+.security-card__icon-wrap {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.security-card__title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.security-card__message {
+  font-size: 12px;
+  line-height: 1.6;
+}

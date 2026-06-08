@@ -1,0 +1,70 @@
+.payment-timeline {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.payment-timeline__item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.payment-timeline__item--connector {
+  flex: 1;
+}
+
+.payment-timeline__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.payment-timeline__dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+
+.payment-timeline__dot--done {
+  background: var(--color-blue);
+}
+
+.payment-timeline__dot-inner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.payment-timeline__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-sec);
+  white-space: nowrap;
+}
+
+.payment-timeline__label--done {
+  color: var(--color-blue);
+}
+
+.payment-timeline__line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin: 0 4px;
+  margin-bottom: 16px;
+  transition: background var(--transition);
+}
+
+.payment-timeline__line--done {
+  background: var(--color-blue);
+}

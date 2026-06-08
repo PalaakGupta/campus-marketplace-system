@@ -1,0 +1,120 @@
+/* Hero variant — used in Dashboard header */
+.balance-card--hero {
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.balance-card__hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.balance-card__hero-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.balance-card__hero-amount {
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+
+.balance-card__hero-right { text-align: right; }
+
+.balance-card__hero-label-sm {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 3px;
+}
+
+.balance-card__hero-held {
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.balance-card__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.balance-card__btn {
+  flex: 1;
+  border-radius: var(--radius-md);
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+}
+
+.balance-card__btn--topup {
+  background: #fff;
+  color: var(--color-dark-blue);
+}
+.balance-card__btn--topup:hover { background: #f0f6ff; }
+
+.balance-card__btn--history {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.balance-card__btn--history:hover { background: rgba(255, 255, 255, 0.22); }
+
+/* Compact variant — used inline */
+.balance-card--compact {
+  padding: 16px 20px;
+}
+
+.balance-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.balance-card__stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.balance-card__stat-label {
+  font-size: 12px;
+  color: var(--color-text-sec);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.balance-card__stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.balance-card__stat-value--available { color: var(--color-dark-blue); }
+.balance-card__stat-value--held      { color: var(--color-orange-text); }
+
+.balance-card__divider-v {
+  width: 1px;
+  height: 40px;
+  background: var(--color-border);
+  margin: 0 20px;
+}
