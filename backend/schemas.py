@@ -34,52 +34,55 @@ class TransactionType(str, Enum):
 # USER SCHEMAS
 
 class UserRole(str, Enum):
-    admin   = "admin"
-    student = "student"
+    admin                = "admin"
+    student              = "student"
+    professor            = "professor"
+    teaching_assistant   = "teaching_assistant"
+    lab_staff            = "lab_staff"
+    administrative_staff = "administrative_staff"
 
 
-# Admin uses this to create a student account
 class UserCreate(BaseModel):
-    roll_number:   str  = Field(..., min_length=2, max_length=50)
-    name:          str  = Field(..., min_length=2, max_length=100)
+    login_id:      str      = Field(..., min_length=2, max_length=50,
+                                    description="Roll number for students, employee ID for staff")
+    name:          str      = Field(..., min_length=2, max_length=100)
     email:         EmailStr
-    date_of_birth: date  # Default password derived from this
+    date_of_birth: date
     role:          UserRole = Field(default=UserRole.student)
 
 
-# Student uses this to log in
 class LoginRequest(BaseModel):
-    roll_number: str = Field(..., min_length=2, max_length=50)
-    password:    str = Field(..., min_length=6)
+    login_id: str = Field(..., min_length=2, max_length=50,
+                          description="Roll number for students, employee ID for staff")
+    password: str = Field(..., min_length=6)
 
 
 class LoginResponse(BaseModel):
-    message:     str
-    user_id:     int
-    roll_number: str
-    name:        str
-    role:        UserRole
+    access_token: str
+    token_type:   str
+    user_id:      str
+    login_id:     str
+    name:         str
+    role:         UserRole
 
 
-# Student uses this to change their own password
 class ChangePasswordRequest(BaseModel):
-    user_id:      int = Field(..., gt=0)
     old_password: str = Field(..., min_length=6)
     new_password: str = Field(..., min_length=6)
 
 
 class UserResponse(BaseModel):
-    id:          int
-    roll_number: str
+    id:          str
+    login_id:    str
     name:        str
     email:       EmailStr
     role:        UserRole
     is_active:   bool
+    is_verified: bool
     created_at:  datetime
 
     class Config:
         from_attributes = True
-
 
 # WALLET SCHEMAS
 

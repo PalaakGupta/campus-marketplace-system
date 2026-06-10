@@ -4,56 +4,53 @@ from sqlalchemy.orm import Session
 import schemas
 import services
 from db import get_db
+from auth import get_current_user, require_admin
+from envelope import success
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.post(
-    "/",
-    response_model=schemas.UserResponse,
-    status_code=201,
-    summary="Admin only — create a student account"
-)
+@router.post("/", status_code=201)
 def create_user(
     payload: schemas.UserCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin)
 ):
-    return services.create_user(db, payload)
+    user = services.create_user(db, payload)
+    return success(schemas.UserResponse.model_validate(user).model_dump())
 
 
-@router.post(
-    "/login",
-    response_model=schemas.LoginResponse,
-    summary="Student login with roll number and password"
-)
+@router.post("/login")
 def login(
     payload: schemas.LoginRequest,
     db: Session = Depends(get_db)
 ):
-    return services.login(db, payload)
+    result = services.login(db, payload)
+    return success(result)
 
 
-@router.post(
-    "/change-password",
-    summary="Student changes their own password"
-)
+@router.post("/change-password")
 def change_password(
     payload: schemas.ChangePasswordRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
-    return services.change_password(db, payload)
+    result = services.change_password(db, current_user, payload)
+    return success(result)
 
 
-@router.get(
-    "/{user_id}",
-    response_model=schemas.UserResponse,
-    summary="Get a user by ID"
-)
+@router.get("/me")
+def get_me(current_user=Depends(get_current_user)):
+    return success(
+        schemas.UserResponse.model_validate(current_user).model_dump()
+    )
+
+
+@router.get("/{user_id}")
 def get_user(
-    user_id: int,
-    db: Session = Depends(get_db)
+    user_id: str,
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user)
 ):
-    return services.get_user_by_id(db, user_id)
+    user = services.get_user_by_id(db, user_id)
+    return success(schemas.UserResponse.model_validate(user).model_dump())
