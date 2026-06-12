@@ -215,7 +215,7 @@ export default function ItemDetail() {
     );
   }
 
-  const canBuy = item.status === 'Available' || item.status === "Avialable";
+  const canBuy = item.status === 'available' ;
   const isOwn = item.isOwnListing;
 
   return (
@@ -246,7 +246,7 @@ export default function ItemDetail() {
         </div>
         <div className="item-detail__hero-badges">
           <StatusBadge status={item.status} size="md" />
-          {item.channel === 'Thrift Store' && (
+          {(item.channel === 'Thrift Store' || item.listing_channel === 'thrift_store') && (
             <span className="item-detail__thrift-badge">THRIFT STORE</span>
           )}
         </div>
@@ -366,13 +366,13 @@ export default function ItemDetail() {
 
       {/* ── Purchase Sheet ── */}
       {showPurchase && (
-        <PurchaseSheet
-          item={item}
-          userBalance={userBalance}
-          onClose={() => setShowPurchase(false)}
-          onConfirm={handleConfirmPurchase}
-          puchasing ={purchasing}
-        />
+      <PurchaseSheet
+        item={item}
+        userBalance={userBalance}
+        onClose={() => setShowPurchase(false)}
+        onConfirm={handleConfirmPurchase}
+        purchasing={purchasing}
+      />
       )}
     </div>
   );

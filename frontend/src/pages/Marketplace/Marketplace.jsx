@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback,useRef } from 'react';
-import { Form, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FiGrid, FiList, FiFilter, FiShoppingBag } from 'react-icons/fi';
 import SearchBar from '../../components/ui/SearchBar/SearchBar';
 import CategoryChips from '../../components/ui/CategoryChips/CategoryChips';

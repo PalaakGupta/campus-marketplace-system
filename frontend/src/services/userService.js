@@ -24,7 +24,7 @@ export async function getUserById(userId) {
  */
 export async function getNotifications(page = 1, unreadOnly = false) {
     const response = await API.get("/notifications", {
-        params: { page, pageSize: 20, unreadOnly },
+       params: { page, page_size: 20, unread_only: unreadOnly }
     });
     return response.data.data ?? response.data;
 }

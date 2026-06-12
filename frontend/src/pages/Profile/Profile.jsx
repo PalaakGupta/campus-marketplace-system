@@ -99,8 +99,8 @@ export default function Profile() {
             )}
             <div className="profile__stats">
               {[
-                { label: 'Listings', value: stats?.listings ?? '—' },
-                { label: 'Sold', value: stats?.sold ?? '—' },
+                { label: 'Listings', value: profile?.stats?.listing_count ?? '—' },
+                { label: 'Sold',     value: profile?.stats?.sold_count    ?? '—' },
                 { label: "Purchases", value: profile?.stats?.purchase_count  ?? "—" },
               ].map((s) => (
                 <div key={s.label} className="profile__stat">
@@ -122,7 +122,7 @@ export default function Profile() {
           <div className="profile__balance-item">
             <span className="profile__balance-label">Available</span>
             <span className="profile__balance-value">
-              ₹{Number(profile.availableBalance ?? 0).toLocaleString()}
+             ₹{Number(profile.available_balance ?? 0).toLocaleString()}
             </span>
           </div>
           <div className="profile__balance-divider" />

@@ -115,7 +115,7 @@ export default function Wallet() {
           <div className="wallet__hero-balance">
             <p className="wallet__hero-label">Total Available Balance</p>
             <p className="wallet__hero-amount">
-              {formatAmount(walletData?.availableBalance)}
+              {formatAmount(walletData?.available_Balance)}
             </p>
             <p className="wallet__hero-sub">Campus Credit Balance</p>
           </div>
@@ -128,7 +128,7 @@ export default function Wallet() {
             {
               icon: FiCheckCircle,
               label: 'Available',
-              value: formatAmount(walletData?.availableBalance),
+              value: formatAmount(walletData?.available_Balance),
               desc: 'Ready to spend',
               color: 'var(--color-green)',
               bg: 'var(--color-green-soft)',
@@ -136,7 +136,7 @@ export default function Wallet() {
             {
               icon: FiLock,
               label: 'In Vault',
-              value: formatAmount(walletData?.heldBalance),
+              value: formatAmount(walletData?.held_Balance),
               desc: 'Awaiting confirmation',
               color: 'var(--color-orange)',
               bg: 'var(--color-orange-soft)',
@@ -159,7 +159,6 @@ export default function Wallet() {
             <input
               type="number"
               className="input-field"
-              placeholder="Enter amount (₵)"
               value={topUpAmount}
               onChange={(e) => setTopUpAmount(e.target.value)}
               min="1"
@@ -239,7 +238,7 @@ export default function Wallet() {
               />
             ) : (
               transactions.map((tx) => {
-                const Icon = TX_ICON[tx.type] ?? FiArrowDownLeft;
+                const Icon = TX_ICON[tx.transaction_type] ?? FiArrowDownLeft;
                 const isCredit = tx.amount > 0;
                 return (
                   <div key={tx.id} className="wallet__tx-item card">
@@ -254,7 +253,7 @@ export default function Wallet() {
                       <div className="wallet__tx-meta">
                         <span className="wallet__tx-date">{tx.date ? new Date(tx.date).toLocaleDateString() : "—"}</span>
                         <span className="wallet__tx-sep">·</span>
-                        <StatusBadge status={tx.paymentStatus || tx.type} size="sm" />
+                        <StatusBadge status={tx.paymentStatus || tx.transaction_type} size="sm" />
                       </div>
                     </div>
                     <p

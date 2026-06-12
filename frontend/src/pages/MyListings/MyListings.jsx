@@ -9,13 +9,14 @@ import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
 import PageHeader from "../../components/layout/PageHeader/PageHeader";
+import { getMyListings, updateItemStatus, deleteItem } from '../../services/itemService';
 import './MyListings.css';
 
 const LISTING_TABS = [
   { id: 'all',       label: 'All' },
-  { id: 'Available', label: 'Available' },
-  { id: 'Reserved',  label: 'Reserved' },
-  { id: 'Sold',      label: 'Sold' },
+  { id: 'available', label: 'Available' },
+  { id: 'reserved',  label: 'Reserved' },
+  { id: 'sold',      label: 'Sold' },
 ];
 
 export default function MyListings() {
@@ -28,18 +29,27 @@ export default function MyListings() {
   const [actionMenu, setActionMenu] = useState(null); 
 
   useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        setLoading(true);
-    
-      } catch (err) {
-        console.error('My listings fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchListings();
-  }, []);
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      const data = await getMyListings();
+      const responseData = data?.data ?? data;
+      setListings(responseData?.listings ?? []);
+      const s = responseData?.stats ?? {};
+      setStats({
+        available:    s.available    ?? 0,
+        reserved:     s.reserved     ?? 0,
+        sold:         s.sold         ?? 0,
+        totalEarned:  s.total_earned ?? 0,
+      });
+    } catch (err) {
+      console.error('My listings fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchListings();
+}, []);
 
   const filtered =
     activeTab === 'all'
@@ -58,11 +68,28 @@ export default function MyListings() {
 
   const handleMarkSold = async (id) => {
     setActionMenu(null);
+    try {
+      await updateItemStatus(id, 'sold');
+      setListings((prev) =>
+        prev.map((l) => l.id === id ? { ...l, status: 'sold' } : l)
+      );
+      setStats((prev) => ({
+        ...prev,
+        available: Math.max(0, prev.available - 1),
+        sold: prev.sold + 1,
+      }));
+    } catch (err) {
+      console.error('Mark sold error:', err);
+    }
   };
-
   const handleDeleteListing = async (id) => {
     setActionMenu(null);
-
+    try {
+      await deleteItem(id);
+      setListings((prev) => prev.filter((l) => l.id !== id));
+    } catch (err) {
+      console.error('Delete listing error:', err);
+    }
   };
 
   return (
@@ -121,8 +148,8 @@ export default function MyListings() {
               >
                 <div className="my-listings__card-body">
                   <div className="my-listings__image-wrap">
-                    {listing.imageUrl
-                      ? <img src={listing.imageUrl} alt={listing.title} className="my-listings__image" />
+                    {(listing.image_url || listing.imageUrl)
+                      ? <img src={listing.image_url || listing.imageUrl} alt={listing.title} className="my-listings__image" />
                       : <div className="my-listings__image-placeholder" />
                     }
                   </div>
@@ -134,13 +161,13 @@ export default function MyListings() {
                     <p className="my-listings__price">₹{Number(listing.price).toLocaleString()}</p>
                     <div className="my-listings__meta">
                       <span className="my-listings__meta-item">
-                        <FiEye size={11} /> {listing.viewCount ?? 0}
+                        <FiEye size={11} /> {listing.view_Count ?? 0}
                       </span>
                       <span className="my-listings__meta-item">
-                        <FiHeart size={11} /> {listing.savedCount ?? 0}
+                        <FiHeart size={11} /> {listing.saved_Count ?? 0}
                       </span>
                       <span className="my-listings__meta-item">
-                        <FiMessageCircle size={11} /> {listing.messageCount ?? 0}
+                        <FiMessageCircle size={11} /> {listing.message_Count ?? 0}
                       </span>
                     </div>
                   </div>
@@ -165,7 +192,7 @@ export default function MyListings() {
                     </button>
                     {actionMenu === listing.id && (
                       <div className="my-listings__dropdown card">
-                        {listing.status === 'Available' && (
+                       {listing.status === 'available' && (
                           <button
                             className="my-listings__dropdown-item"
                             onClick={(e) => { e.stopPropagation(); handleMarkSold(listing.id); }}

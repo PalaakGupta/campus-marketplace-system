@@ -10,6 +10,7 @@ import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PaymentTimeline from '../../components/ui/PaymentTimeline/PaymentTimeLine';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
+import { getMyPurchases, confirmDelivery } from '../../services/purchaseService';
 import './Purchases.css';
 
 const PURCHASE_TABS = [
@@ -31,7 +32,18 @@ export default function Purchases() {
     const fetchPurchases = async () => {
       try {
         setLoading(true);
-  
+        const data = await getMyPurchases();
+        const responseData = data?.data ?? data;
+        setPurchases(
+          (responseData?.purchases ?? []).map(p => ({
+            ...p,
+            paymentStatus: p.payment_status ?? p.paymentStatus,
+            itemId: p.item_id ?? p.itemId,
+            sellerName: p.seller_name ?? p.sellerName,
+            imageUrl: p.image_url ?? p.imageUrl,
+            purchasedAt: p.purchased_at ?? p.purchasedAt,
+          }))
+        );
       } catch (err) {
         console.error('Purchases fetch error:', err);
       } finally {
@@ -49,7 +61,12 @@ export default function Purchases() {
   const handleConfirmDelivery = async (purchaseId) => {
     try {
       setConfirming(purchaseId);
-    
+      await confirmDelivery(purchaseId);
+      setPurchases((prev) =>
+        prev.map((p) =>
+          p.id === purchaseId ? { ...p, payment_status: 'released', paymentStatus: 'released' } : p
+        )
+      );
     } catch (err) {
       console.error('Confirm delivery error:', err);
     } finally {

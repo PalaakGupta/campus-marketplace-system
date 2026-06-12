@@ -34,9 +34,9 @@ export async function getConversationById(conversationId) {
  * PATCH /chat/conversations/{id}/read
  * Mark all messages in conversation as read.
  */
-export async function markConversationRead(conversationId) {
+  export async function markConversationRead(conversationId) {
     const response = await API.patch(
-        `/chat/conversations/${conversationId}/read`
+        `/chat/${conversationId}/read`
     );
     return response.data.data ?? response.data;
 }

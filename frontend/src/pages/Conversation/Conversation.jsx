@@ -6,13 +6,13 @@ import {
 } from 'react-icons/fi';
 
 import PageHeader from '../../components/layout/PageHeader/PageHeader';
-import SearchBar from '../../components/ui/SearchBar/SearchBar';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
+import { getChatHistory, createChatWebSocket } from '../../services/chatService';
 import './Conversation.css';
 
 export default function Conversation() {
-  const { id } = useParams();
+  const { conversationId: id } = useParams();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
@@ -26,7 +26,17 @@ export default function Conversation() {
     const fetchConversation = async () => {
       try {
         setLoading(true);
-
+        const data = await getChatHistory(id);
+        const responseData = data?.data ?? data;
+        setConversation(responseData?.conversation ?? null);
+        setMessages(
+          (responseData?.messages ?? []).map(m => ({
+            ...m,
+            text:      m.content ?? m.text,
+            fromMe:    m.is_from_me ?? false,
+            timestamp: m.created_at ?? m.timestamp,
+          }))
+        );
       } catch (err) {
         console.error('Conversation fetch error:', err);
       } finally {
@@ -57,6 +67,19 @@ export default function Conversation() {
 
     try {
       setSending(true);
+      const ws = createChatWebSocket(id);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ content: text }));
+        ws.close();
+      };
+      // OR use HTTP POST if WebSocket is unavailable:
+      // await API.post(`/chat/${id}/messages`, { content: text });
+      setMessages((prev) =>
+        prev.map((m) => m.id === optimistic.id
+          ? { ...m, status: 'sent' }
+          : m
+        )
+      );
 
     } catch (err) {
       setMessages((prev) =>
