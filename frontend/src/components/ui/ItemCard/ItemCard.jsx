@@ -29,7 +29,7 @@ export default function ItemCard({
             <p className="item-card__title">{item.title}</p>
             <StatusBadge status={item.status} size="sm" />
           </div>
-          <p className="item-card__price">₵{Number(item.price).toLocaleString()}</p>
+          <p className="item-card__price">₹{Number(item.price).toLocaleString()}</p>
           <div className="item-card__meta">
             <span className="item-card__condition">{item.condition}</span>
             <span className="item-card__dot">·</span>
@@ -73,7 +73,7 @@ export default function ItemCard({
       <div className="item-card__body">
         <p className="item-card__title">{item.title}</p>
         <div className="item-card__price-row">
-        <span className="item-card__price">₹{Number(item.price).toLocaleString()}</span>
+          <span className="item-card__price">₹{Number(item.price).toLocaleString()}</span>
           <span className="item-card__condition">{item.condition}</span>
         </div>
         <div className="item-card__footer">

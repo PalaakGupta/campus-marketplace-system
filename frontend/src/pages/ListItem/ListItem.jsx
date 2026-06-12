@@ -6,6 +6,8 @@ import {
 } from 'react-icons/fi';
 import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
 import CategoryChips from '../../components/ui/CategoryChips/CategoryChips';
+import { createItem } from '../../services/itemService';
+import API from '../../services/api';
 import './ListItem.css';
 
 const TOTAL_STEPS = 4;
@@ -71,12 +73,13 @@ function hasErrors(errors) {
 
 export default function ListItem() {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
+  const fileRef = useRef(null);
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState(INITIAL_ERRORS);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const pct = Math.round((step / TOTAL_STEPS) * 100);
 
@@ -120,9 +123,39 @@ export default function ListItem() {
   const handlePublish = async () => {
     try {
       setSubmitting(true);
+      setSubmitError("");
 
+      const listingData = await createItem({
+        title:           form.title.trim(),
+        description:     form.description.trim(),
+        price:           parseInt(form.price, 10),
+        category:        form.category,
+        condition:       form.condition,
+        listing_channel: form.channel,
+      });
+
+      const listingId = listingData.id || listingData.data?.id;
+
+      // Step 2: Upload images if any
+      if (form.images.length > 0 && listingId) {
+        try {
+          const formData = new FormData();
+          form.images.forEach((img) => formData.append("images[]", img.file));
+          await API.post(`/items/${listingId}/images`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        } catch (imgErr) {
+          console.warn("Image upload failed — listing created without images:", imgErr);
+        }
+      }
+
+      navigate(listingId ? `/item/${listingId}` : "/marketplace");
     } catch (err) {
-      console.error('Publish listing error:', err);
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.detail ||
+        "Failed to publish listing";
+      setSubmitError(typeof msg === "string" ? msg : "Something went wrong");
     } finally {
       setSubmitting(false);
     }
@@ -178,6 +211,12 @@ export default function ListItem() {
 
       {/* ── Step Content ── */}
       <div className="list-item__body">
+
+        {submitError && (
+          <div style={{ background: "var(--color-red-soft)", border: "1px solid #fecaca", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "var(--color-red-dark)", fontWeight: 500 }}>
+            {submitError}
+          </div>
+        )}
 
         {/* STEP 1 — Photos */}
         {step === 1 && (

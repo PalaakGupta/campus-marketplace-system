@@ -8,9 +8,12 @@ import {
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
+import { getItemById, saveItem, unsaveItem, incrementView } from "../../services/itemService";
+import { purchaseItem } from "../../services/purchaseService";
+import { getWalletSummary } from "../../services/walletService";
 import './ItemDetail.css';
 
-function PurchaseSheet({ item, onClose, onConfirm, userBalance }) {
+function PurchaseSheet({ item, onClose, onConfirm, userBalance,purchasing }) {
   const price = Number(item?.price ?? 0);
   const balance = Number(userBalance ?? 0);
   const remaining = balance - price;
@@ -18,26 +21,22 @@ function PurchaseSheet({ item, onClose, onConfirm, userBalance }) {
 
   return (
     <div className="purchase-sheet__overlay" onClick={onClose}>
-      <div
-        className="purchase-sheet anim-slide-up"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="purchase-sheet anim-slide-up" onClick={(e) => e.stopPropagation()}>
         <div className="purchase-sheet__handle" />
-
         <h2 className="purchase-sheet__title">Confirm Purchase</h2>
         <p className="purchase-sheet__subtitle">Review before completing</p>
 
         {/* Item Summary */}
         <div className="purchase-sheet__item-row">
           <div className="purchase-sheet__item-image-wrap">
-            {item?.imageUrl
+            {item?.imageUrl 
               ? <img src={item.imageUrl} alt={item.title} className="purchase-sheet__item-image" />
               : <div className="purchase-sheet__item-image-placeholder" />
             }
           </div>
           <div className="purchase-sheet__item-info">
             <p className="purchase-sheet__item-title">{item?.title}</p>
-            <p className="purchase-sheet__item-meta">{item?.condition} · {item?.sellerName}</p>
+            <p className="purchase-sheet__item-meta">{item?.condition} · {item?.sellerName }</p>
             <p className="purchase-sheet__item-price">₹{price.toLocaleString()}</p>
           </div>
         </div>
@@ -89,7 +88,7 @@ function PurchaseSheet({ item, onClose, onConfirm, userBalance }) {
             disabled={!canAfford}
             type="button"
           >
-            <FiLock size={15} /> Confirm & Pay
+            <FiLock size={15} /> {purchasing ? "Processing..." : "Confirm & Pay"}
           </button>
         </div>
       </div>
@@ -107,38 +106,76 @@ export default function ItemDetail() {
   const [userBalance, setUserBalance] = useState(null);
   const [showPurchase, setShowPurchase] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState(null);
   const [error, setError] = useState(null);
 
+  const currentUserId = localStorage.getItem("user_id");
+
   useEffect(() => {
-    const fetchItem = async () => {
+    const fetchAll = async () => {
       try {
         setLoading(true);
         setError(null);
+        const [itemData, walletData] = await Promise.all([
+          getItemById(id),
+          getWalletSummary().catch(() => null),
+        ]);
+        // Normalize field names
+        const normalized = {
+          ...itemData,
+          imageUrl:       itemData.image_url || itemData.imageUrl,
+          sellerName:     itemData.seller?.name || itemData.seller_name,
+          sellerRole:     itemData.seller?.role || itemData.seller_role,
+          sellerVerified: itemData.seller?.is_verified ?? itemData.seller_verified ?? false,
+          savedCount:     itemData.saved_count ?? itemData.savedCount ?? 0,
+          viewCount:      itemData.view_count  ?? itemData.viewCount  ?? 0,
+          isOwnListing:   (itemData.seller?.id || itemData.seller_id) === currentUserId,
+        };
+        setItem(normalized);
+        setIsSaved(itemData.is_saved ?? false);
+        setUserBalance(walletData?.available_balance ?? null);
+
+        incrementView(id).catch(() => {});
       } catch (err) {
-        setError('Failed to load item. Please try again.');
-        console.error('Item fetch error:', err);
+        setError(err?.response?.data?.error?.message || "Failed to load item");
       } finally {
         setLoading(false);
       }
     };
-    fetchItem();
-  }, [id]);
+    fetchAll();
+  }, [id, currentUserId]);
 
   const handleSave = async () => {
     setIsSaved((s) => !s);
-    // TODO: await api.toggleSavedItem(id);
+    try{
+      if (isSaved) {
+        await unsaveItem(id);
+      } else {
+        await saveItem(id);
+      }
+    }catch{
+      setIsSaved((s)=> !s);
+    }
   };
-
-  const handleChat = () => navigate('/messages');
 
   const handleConfirmPurchase = async () => {
     try {
       setPurchasing(true);
-      // TODO: await api.purchaseItem(id);
+      setPurchaseError(null);
+      await purchaseItem(id);
       setShowPurchase(false);
-      navigate('/purchases');
+      navigate("/purchases");
     } catch (err) {
-      console.error('Purchase error:', err);
+      const code = err?.response?.data?.error?.code;
+      const msg  = err?.response?.data?.error?.message || "Purchase failed";
+      setPurchaseError({ code, message: msg });
+
+      // Refresh item status if reserved/sold by someone else
+      if (code === "ITEM_RESERVED" || code === "ITEM_SOLD" || code === "CONCURRENT_PURCHASE") {
+        setShowPurchase(false);
+        const fresh = await getItemById(id).catch(() => null);
+        if (fresh) setItem((prev) => ({ ...prev, status: fresh.status }));
+      }
     } finally {
       setPurchasing(false);
     }
@@ -153,7 +190,7 @@ export default function ItemDetail() {
           </button>
         </div>
         <div style={{ padding: '16px' }}>
-          <LoadingState type="list" count={2} />
+          <LoadingState type="list" count={3} />
         </div>
       </div>
     );
@@ -178,8 +215,8 @@ export default function ItemDetail() {
     );
   }
 
-  const isOwnItem = false; // TODO: replace with auth check: item.sellerId === currentUser.id
-  const canBuy = item.status === 'Available' && !isOwnItem;
+  const canBuy = item.status === 'Available' || item.status === "Avialable";
+  const isOwn = item.isOwnListing;
 
   return (
     <div className="item-detail page anim-fade-in">
@@ -216,22 +253,26 @@ export default function ItemDetail() {
       </div>
 
       {/* ── Body ── */}
-      <div className={`item-detail__body ${canBuy ? 'item-detail__body--with-action' : ''}`}>
+      <div className={`item-detail__body ${canBuy && !isOwn ? 'item-detail__body--with-action' : ''}`}>
 
+        {/* Purchase error */}
+        {purchaseError && (
+          <div className="item-detail__alert item-detail__alert--warning">
+            <FiAlertCircle size={17} />
+            <div>
+              <p className="item-detail__alert-title">Purchase Failed</p>
+              <p className="item-detail__alert-desc">{purchaseError.message}</p>
+            </div>
+          </div>
+        )}
         {/* Title + Price */}
         <div className="item-detail__title-row">
           <div className="item-detail__title-wrap">
             <h1 className="item-detail__title">{item.title}</h1>
             <div className="item-detail__chips">
-              <span className="chip chip-sm">
-                <FiTag size={11} /> {item.category}
-              </span>
-              <span className="chip chip-sm">
-                <FiEye size={11} /> {item.viewCount ?? 0} views
-              </span>
-              <span className="chip chip-sm">
-                <FiHeart size={11} /> {item.savedCount ?? 0}
-              </span>
+              <span className="chip chip-sm"><FiTag size={11} /> {item.category}</span>
+              <span className="chip chip-sm"><FiEye size={11} /> {item.viewCount ?? 0} views</span>
+              <span className="chip chip-sm"><FiHeart size={11} /> {item.savedCount ?? 0}</span>
             </div>
           </div>
           <div className="item-detail__price-wrap">
@@ -252,7 +293,7 @@ export default function ItemDetail() {
           </div>
           <button
             className="btn btn-secondary btn-inline btn-sm"
-            onClick={handleChat}
+            onClick={() => navigate(`/messages`)}
             type="button"
           >
             <FiMessageCircle size={13} /> Chat
@@ -266,7 +307,7 @@ export default function ItemDetail() {
         </div>
 
         {/* Status-specific alerts */}
-        {item.status === 'Reserved' && (
+        {(item.status === 'Reserved' || item.status === "reserved" )&& (
           <div className="item-detail__alert item-detail__alert--warning">
             <FiAlertCircle size={17} />
             <div>
@@ -278,7 +319,7 @@ export default function ItemDetail() {
           </div>
         )}
 
-        {item.status === 'Sold' && (
+        {(item.status === 'Sold' || item.status === "sold")&& (
           <div className="item-detail__alert item-detail__alert--neutral">
             <FiTag size={17} />
             <div>
@@ -290,7 +331,7 @@ export default function ItemDetail() {
           </div>
         )}
 
-        {isOwnItem && (
+        {isOwn && (
           <div className="item-detail__alert item-detail__alert--info">
             <FiAlertCircle size={17} />
             <div>
@@ -309,7 +350,7 @@ export default function ItemDetail() {
       </div>
 
       {/* ── Sticky Buy Button ── */}
-      {canBuy && (
+      {canBuy && !isOwn && (
         <div className="item-detail__sticky-action">
           <button
             className="btn btn-primary"
@@ -330,6 +371,7 @@ export default function ItemDetail() {
           userBalance={userBalance}
           onClose={() => setShowPurchase(false)}
           onConfirm={handleConfirmPurchase}
+          puchasing ={purchasing}
         />
       )}
     </div>

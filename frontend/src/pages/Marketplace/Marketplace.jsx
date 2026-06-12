@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback,useRef } from 'react';
+import { Form, useNavigate } from 'react-router-dom';
 import { FiGrid, FiList, FiFilter, FiShoppingBag } from 'react-icons/fi';
 import SearchBar from '../../components/ui/SearchBar/SearchBar';
 import CategoryChips from '../../components/ui/CategoryChips/CategoryChips';
@@ -7,6 +7,7 @@ import ItemCard from '../../components/ui/ItemCard/ItemCard';
 import TabBar from '../../components/ui/TabBar/TabBar';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
+import { getItems, saveItem, unsaveItem } from "../../services/itemService";
 import './Marketplace.css';
 
 const CATEGORIES = [
@@ -29,44 +30,100 @@ const CHANNEL_TABS = [
 export default function Marketplace() {
   const navigate = useNavigate();
 
-  const [items, setItems]               = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [search, setSearch]             = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [activeChannel, setActiveChannel]   = useState('All');
-  const [viewMode, setViewMode]         = useState('grid');
-  const [savedItems, setSavedItems]     = useState(new Set());
-  const [page, setPage]                 = useState(1);
-  const [hasMore, setHasMore]           = useState(false);
+  const [items, setItems]                   = useState([]);
+  const [loading, setLoading]               = useState(true);
+  const [loadingMore, setLoadingMore]       = useState(false);
+  const [search, setSearch]                 = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeChannel, setActiveChannel]   = useState("All");
+  const [viewMode, setViewMode]             = useState("grid");
+  const [savedItems, setSavedItems]         = useState(new Set());
+  const [page, setPage]                     = useState(1);
+  const [hasMore, setHasMore]               = useState(false);
+  const [total, setTotal]                   = useState(0);
 
+  const debounceRef = useRef(null);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (
+    searchVal, category, channel, pageNum, append = false
+  ) => {
     try {
-      setLoading(true);
- 
+      if (append) setLoadingMore(true);
+      else        setLoading(true);
+
+      const params = {
+        page:     pageNum,
+        pageSize: 20,
+      };
+      if (searchVal)                          params.search   = searchVal;
+      if (category && category !== "All")     params.category = category;
+      if (channel  && channel  !== "All")     params.channel  = channel;
+
+      const data = await getItems(params);
+
+      // Handle both array and paginated envelope
+      let newItems = [];
+      if (Array.isArray(data)) {
+        newItems = data;
+        setTotal(data.length);
+        setHasMore(false);
+      } else {
+        newItems = data.data || data.items || [];
+        setTotal(data.meta?.total ?? newItems.length);
+        setHasMore(data.meta?.has_more ?? data.meta?.hasMore ?? false);
+      }
+
+      setItems((prev) => (append ? [...prev, ...newItems] : newItems));
     } catch (err) {
-      console.error('Marketplace fetch error:', err);
+      console.error("Marketplace fetch error:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [search, activeCategory, activeChannel, page]);
+  }, []);
 
   useEffect(() => {
-    const debounce = setTimeout(fetchItems, 300);
-    return () => clearTimeout(debounce);
-  }, [fetchItems]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      fetchItems(search, activeCategory, activeChannel, 1, false);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [search, activeCategory, activeChannel, fetchItems]);
 
-  const handleSave = (itemId) => {
-    setSavedItems((prev) => {
-      const next = new Set(prev);
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId);
-      return next;
-    });
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchItems(search, activeCategory, activeChannel, nextPage, true);
   };
 
-  const handleView = (item) => navigate(`/item/${item.id}`);
+  const handleSave = async (itemId) => {
+    const wasSaved = savedItems.has(itemId);
+    setSavedItems((prev) => {
+      const next = new Set(prev);
+      wasSaved ? next.delete(itemId) : next.add(itemId);
+      return next;
+    });
+    try {
+      if (wasSaved) await unsaveItem(itemId);
+      else          await saveItem(itemId);
+    } catch {
+      setSavedItems((prev) => {
+        const next = new Set(prev);
+        wasSaved ? next.add(itemId) : next.delete(itemId);
+        return next;
+      });
+    }
+  };
 
-  const resultCount = items.length;
+  const normalizeItem = (item) => ({
+    ...item,
+    imageUrl:       item.image_url       || item.imageUrl,
+    sellerName:     item.seller_name     || item.sellerName     || "Unknown",
+    sellerVerified: item.seller_verified ?? item.sellerVerified ?? false,
+    savedCount:     item.saved_count     ?? item.savedCount     ?? 0,
+    viewCount:      item.view_count      ?? item.viewCount      ?? 0,
+  });
 
   return (
     <div className="marketplace page">
@@ -104,7 +161,7 @@ export default function Marketplace() {
           <TabBar
             tabs={CHANNEL_TABS}
             activeTab={activeChannel}
-            onTabChange={setActiveChannel}
+            onTabChange={(val) => { setActiveChannel(val); setPage(1); }}
             scrollable
           />
         </div>
@@ -113,7 +170,7 @@ export default function Marketplace() {
           <CategoryChips
             categories={CATEGORIES}
             active={activeCategory}
-            onSelect={setActiveCategory}
+            onSelect={(val) => { setActiveChannel(val); setPage(1); }}
           />
         </div>
       </div>
@@ -145,9 +202,9 @@ export default function Marketplace() {
             {items.map((item) => (
               <ItemCard
                 key={item.id}
-                item={item}
+                item={normalizeItem(item)}
                 layout="grid"
-                onView={handleView}
+                onView={(item) => navigate(`/item/${item.id}`)}
                 onSave={handleSave}
                 isSaved={savedItems.has(item.id)}
               />
@@ -158,9 +215,9 @@ export default function Marketplace() {
             {items.map((item) => (
               <ItemCard
                 key={item.id}
-                item={item}
+                item={normalizeItem(item)}
                 layout="list"
-                onView={handleView}
+                onView={(item) => navigate(`/item/${item.id}`)}
                 onSave={handleSave}
                 isSaved={savedItems.has(item.id)}
               />
@@ -171,10 +228,11 @@ export default function Marketplace() {
         {hasMore && !loading && (
           <button
             className="btn btn-secondary btn-inline marketplace__load-more"
-            onClick={() => setPage(p => p + 1)}
+            onClick={handleLoadMore}
+            disabled={loadingMore}
             type="button"
           >
-            Load More
+            {loadingMore ? "Loading..." : "Load More"}
           </button>
         )}
       </div>
