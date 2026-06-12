@@ -9,6 +9,8 @@ import TabBar from '../../components/ui/TabBar/TabBar';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
+import { getWalletSummary, topUpWallet, getTransactions } from "../../services/walletService";
+import { confirmDelivery } from "../../services/purchaseService";
 import './Wallet.css';
 
 const TX_TABS = [
@@ -33,44 +35,65 @@ export default function Wallet() {
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
+  const [confirming, setConfirming] = useState(null);
+  const [topUpAmount, setTopUpAmount] = useState("");
+  const [toppingUp, setToppingUp] = useState(false);
+  const [showTopUp, setShowTopUp] = useState(false);
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        setLoading(true);
-
-      } catch (err) {
-        console.error('Wallet fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchWallet();
+  const fetchWallet = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getWalletSummary();
+      setWalletData(data);
+    } catch (err) {
+      console.error("Wallet fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setTxLoading(true);
-      } catch (err) {
-        console.error('Transactions fetch error:', err);
-      } finally {
-        setTxLoading(false);
-      }
-    };
-    fetchTransactions();
-  }, [activeTab]);
+   const fetchTransactions = useCallback(async (type) => {
+    try {
+      setTxLoading(true);
+      const data = await getTransactions(type);
+      const list = Array.isArray(data) ? data : (data.transactions || data.data || []);
+      setTransactions(list);
+    } catch (err) {
+      console.error("Transactions fetch error:", err);
+    } finally {
+      setTxLoading(false);
+    }
+  }, []);
+
+  useEffect(()=>{fetchWallet();},[fetchWallet]);
+  useEffect(()=>{fetchTransactions(activeTab);},[activeTab, fetchTransactions]);
 
   const handleConfirmDelivery = async (purchaseId) => {
     try {
-
+      setConfirming(purchaseId);
+      await confirmDelivery(purchaseId);
+      await fetchWallet();
     } catch (err) {
-      console.error('Confirm delivery error:', err);
+      console.error("Confirm error:", err);
+    } finally {
+      setConfirming(null);
     }
   };
 
-  const handleTopUp = () => {
-
+  const handleTopUp = async () => {
+    const amount = parseInt(topUpAmount, 10);
+    if (!amount || amount <= 0) return;
+    try {
+      setToppingUp(true);
+      await topUpWallet(amount);
+      setTopUpAmount("");
+      setShowTopUp(false);
+      await fetchWallet();
+    } catch (err) {
+      console.error("Top up error:", err);
+    } finally {
+      setToppingUp(false);
+    }
   };
 
   const formatAmount = (n) =>
@@ -131,44 +154,65 @@ export default function Wallet() {
         </div>
 
         {/* ── Top Up ── */}
-        <button className="btn btn-primary" onClick={handleTopUp} type="button">
-          <FiPlus size={17} /> Add Funds to Wallet
-        </button>
+        {showTopUp ? (
+          <div className="card" style={{ padding: 16, display: "flex", gap: 10 }}>
+            <input
+              type="number"
+              className="input-field"
+              placeholder="Enter amount (₵)"
+              value={topUpAmount}
+              onChange={(e) => setTopUpAmount(e.target.value)}
+              min="1"
+              style={{ flex: 1 }}
+            />
+            <button className="btn btn-primary btn-inline" style={{ flex: "0 0 auto", padding: "13px 20px" }} onClick={handleTopUp} disabled={toppingUp || !topUpAmount} type="button">
+              {toppingUp ? "..." : "Top Up"}
+            </button>
+            <button className="btn btn-secondary btn-inline" style={{ flex: "0 0 auto", padding: "13px 16px" }} onClick={() => setShowTopUp(false)} type="button">
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className="btn btn-primary" onClick={() => setShowTopUp(true)} type="button">
+            <FiPlus size={17} /> Add Funds to Wallet
+          </button>
+        )}
 
         {/* ── Active Holds ── */}
-        {activeHolds.length > 0 && (
+        {walletData?.active_holds?.length > 0 && (
           <div>
             <div className="section-header">
               <span className="section-title">Active Payment Holds</span>
-              <span className="badge-count">{activeHolds.length}</span>
+              <span className="badge-count">{walletData.active_holds.length}</span>
             </div>
             <div className="wallet__holds">
-              {activeHolds.map((hold) => (
-                <div key={hold.id} className="wallet__hold-card card">
+              {walletData.active_holds.map((hold) => (
+                <div key={hold.purchase_id} className="wallet__hold-card card">
                   <div className="wallet__hold-banner">
                     <FiLock size={14} />
                     <span>Payment secured in campus vault</span>
                   </div>
                   <div className="wallet__hold-body">
                     <div className="wallet__hold-image-wrap">
-                      {hold.imageUrl
-                        ? <img src={hold.imageUrl} alt={hold.title} className="wallet__hold-image" />
+                      {hold.image_url
+                        ? <img src={hold.image_url} alt={hold.title} className="wallet__hold-image" />
                         : <div className="wallet__hold-image-placeholder" />
                       }
                     </div>
                     <div className="wallet__hold-info">
                       <p className="wallet__hold-title">{hold.title}</p>
-                      <p className="wallet__hold-seller">{hold.sellerName}</p>
+                      <p className="wallet__hold-seller">{hold.seller_name}</p>
                     </div>
                     <div className="wallet__hold-right">
                       <p className="wallet__hold-amount">{formatAmount(hold.amount)}</p>
                       <button
                         className="btn btn-sm btn-inline"
-                        style={{ background: 'var(--color-green)', color: '#fff', border: 'none', marginTop: 6 }}
-                        onClick={() => handleConfirmDelivery(hold.id)}
+                        style={{ background: "var(--color-green)", color: "#fff", border: "none", marginTop: 6 }}
+                        onClick={() => handleConfirmDelivery(hold.purchase_id)}
+                        disabled={confirming === hold.purchase_id}
                         type="button"
                       >
-                        Confirm
+                        {confirming === hold.purchase_id ? "..." : "Confirm"}
                       </button>
                     </div>
                   </div>
@@ -208,9 +252,9 @@ export default function Wallet() {
                     <div className="wallet__tx-info">
                       <p className="wallet__tx-title">{tx.title}</p>
                       <div className="wallet__tx-meta">
-                        <span className="wallet__tx-date">{tx.date}</span>
+                        <span className="wallet__tx-date">{tx.date ? new Date(tx.date).toLocaleDateString() : "—"}</span>
                         <span className="wallet__tx-sep">·</span>
-                        <StatusBadge status={tx.paymentStatus} size="sm" />
+                        <StatusBadge status={tx.paymentStatus || tx.type} size="sm" />
                       </div>
                     </div>
                     <p

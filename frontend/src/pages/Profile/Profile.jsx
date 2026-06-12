@@ -3,25 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import {
   FiPackage, FiShoppingBag, FiTrendingUp, FiCreditCard,
   FiSettings, FiShield, FiLogOut, FiChevronRight,
-  FiUser, FiStar,
+  FiUser,
 } from 'react-icons/fi';
-import PageHeader from '../../components/layout/PageHeader/PageHeader';
+import LoadingState from '../../components/ui/LoadingState/LoadingState';
+import { getFullProfile } from "../../services/userService";
+import { logout } from "../../services/authService";
 
 import './Profile.css';
 
 export default function Profile() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
-  const [stats, setStats] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
+        const data = await getFullProfile();
+        setProfile(data);
       } catch (err) {
-        console.error('Profile fetch error:', err);
+        setProfile({
+          name:              localStorage.getItem("name") || "—",
+          login_id:          localStorage.getItem("login_id") || "—",
+          role:              "Campus Community",
+          available_balance: null,
+          held_balance:      null,
+          stats:             { listing_count: 0, sold_count: 0, purchase_count: 0 },
+        });
+        setError(null);
       } finally {
         setLoading(false);
       }
@@ -30,6 +42,15 @@ export default function Profile() {
   }, []);
 
   const handleLogout = async () => {
+    logout();
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    return parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : parts[0][0].toUpperCase();
   };
 
   const MENU_GROUPS = [
@@ -48,7 +69,6 @@ export default function Profile() {
       ],
     },
     {
-      danger: true,
       items: [
         { icon: FiLogOut, label: 'Sign Out', action: handleLogout, danger: true },
       ],
@@ -68,15 +88,20 @@ export default function Profile() {
         ) : (
           <>
             <div className="profile__avatar avatar avatar-xl">
-              {user?.name?.charAt(0) ?? <FiUser size={28} />}
+              {profile?.avatar_initials || getInitials(profile?.name) || <FiUser size={28} />}
             </div>
-            <h1 className="profile__name">{user?.name ?? '—'}</h1>
-            <p className="profile__role">{user?.role ?? 'Campus Community'}</p>
+            <h1 className="profile__name">{profile?.name ?? '—'}</h1>
+            <p className="profile__role">{profile?.role ?? 'Campus Community'}</p>
+            {profile?.login_id && (
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
+                ID: {profile.login_id}
+              </p>
+            )}
             <div className="profile__stats">
               {[
                 { label: 'Listings', value: stats?.listings ?? '—' },
                 { label: 'Sold', value: stats?.sold ?? '—' },
-                { label: 'Rating', value: stats?.rating ? `${stats.rating}` : '—', icon: <FiStar size={12} /> },
+                { label: "Purchases", value: profile?.stats?.purchase_count  ?? "—" },
               ].map((s) => (
                 <div key={s.label} className="profile__stat">
                   <p className="profile__stat-value">
@@ -92,19 +117,19 @@ export default function Profile() {
       </div>
 
       {/* ── Balance Bar ── */}
-      {user && (
+      {profile?.available_balance !== null && profile?.available_balance !== undefined && (
         <div className="profile__balance-bar" onClick={() => navigate('/wallet')}>
           <div className="profile__balance-item">
             <span className="profile__balance-label">Available</span>
             <span className="profile__balance-value">
-              ₹{Number(user.availableBalance ?? 0).toLocaleString()}
+              ₹{Number(profile.availableBalance ?? 0).toLocaleString()}
             </span>
           </div>
           <div className="profile__balance-divider" />
           <div className="profile__balance-item">
             <span className="profile__balance-label">In Vault</span>
             <span className="profile__balance-value profile__balance-value--held">
-              ₹{Number(user.heldBalance ?? 0).toLocaleString()}
+              ₹{Number(profile.heldBalance ?? 0).toLocaleString()}
             </span>
           </div>
           <FiChevronRight size={16} className="profile__balance-arrow" />

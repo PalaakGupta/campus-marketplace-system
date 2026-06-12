@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BalanceCard from '../../components/ui/BalanceCard/BalanceCard';
 import ItemCard from '../../components/ui/ItemCard/ItemCard';
@@ -6,22 +6,55 @@ import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
-import { FiBell, FiPackage, FiHeart, FiMessageCircle, FiShield, FiChevronRight, FiClock, FiAlertCircle, FiPlus, FiCheckCircle, FiTrendingUp } from 'react-icons/fi';
+import { FiBell, FiPackage, FiHeart, FiMessageCircle, FiShield, FiChevronRight, FiClock, FiAlertCircle, FiPlus, FiCheckCircle, FiTrendingUp, FiShoppingBag } from 'react-icons/fi';
+
+import { confirmDelivery } from '../../services/purchaseService';
+import API from '../../services/api';
 import './Dashboard.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
   // States
-  const [user, setUser] = useState(null);
-  const [recentItems, setRecentItems] = useState([]);
-  const [activePurchases, setActivePurchases] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [savedItems, setSavedItems] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ listings: 0, saved: 0, messages: 0 });
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] =useState(null);
+  
 
-  const handleTopUp = () => navigate('/wallet');
-  const handleHistory = () => navigate('/wallet');
+  const fetchDashboard = useCallback(async ()=>{
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await API.get("/dashboard");
+      setDashboardData(response.data);
+    } catch (err) {
+      setError(
+        err?.response?.data?.error?.message || "Failed to load dashboard"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  const handleConfirmDelivery = async (purchaseId) =>{
+    try {
+      setConfirming(true);
+      await confirmDelivery(purchaseId);
+      // Refresh dashboard to reflect new balance and cleared hold
+      await fetchDashboard();
+    } catch (err) {
+      console.error("Confirm delivery failed:", err);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const handleSaveItem = (itemId) => {
     setSavedItems((prev) => {
       const next = new Set(prev);
@@ -30,6 +63,24 @@ export default function Dashboard() {
     });
   };
 
+  if(error){
+    return (
+      <div className="dashboard page">
+        <div className="dashboard__body">
+          <EmptyState
+            icon={FiShield}
+            title="Could not load dashboard"
+            description={error}
+            action={fetchDashboard}
+            actionLabel="Try Again"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const { user, wallet, stats, active_purchase, recent_listings } =
+    dashboardData || {};
 
     return (
       <div className="dashboard page anim-fade-in">
@@ -38,11 +89,11 @@ export default function Dashboard() {
           <div className="dashboard__banner-inner">
             <div className="dashboard__greeting">
               <div className="dashboard__avatar avatar avatar-md">
-                {user?.name?.charAt(0) ?? '?'}
+                {user?.avatar_initial || "?"}
               </div>
               <div>
                 <p className="dashboard__greeting-label">Hello,</p>
-                <p className="dashboard__greeting-name">{user?.name ?? '—'}</p>
+                <p className="dashboard__greeting-name">{user?.name ?? "—"}</p>
               </div>
             </div>
             <div className="dashboard__header-actions">
@@ -52,25 +103,27 @@ export default function Dashboard() {
                 aria-label="Notifications"
               >
                 <FiBell size={22} />
-                <span className="notif-dot" />
+                {stats?.unused_messages> 0 && (
+                   <span className="notif-dot" />
+                )}
               </button>
             </div>
           </div>
           <BalanceCard
-            availableBalance={user?.availableBalance}
-            heldBalance={user?.heldBalance}
-            onTopUp={handleTopUp}
-            onHistory={handleHistory}
-          />
+            availableBalance={wallet?.available_balance}
+            heldBalance={wallet?.held_balance}
+            onTopUp={() => navigate("/wallet")}
+            onHistory={() => navigate("/wallet")}
+            />
         </div>
 
         <div className="dashboard__body">
           {/* ── Quick Stats ── */}
           <div className="dashboard__stats">
             {[
-              { icon: FiPackage, label: 'My Listings', value: stats.listings, to: '/my-listings', color: 'var(--color-blue)' },
-              { icon: FiHeart, label: 'Saved Items', value: stats.saved, to: '/marketplace', color: '#8b5cf6' },
-              { icon: FiMessageCircle, label: 'Messages', value: stats.messages, to: '/messages', color: 'var(--color-green)' },
+              { icon: FiPackage, label: 'My Listings', value: stats?.active_listings ?? 0, to: '/my-listings', color: 'var(--color-blue)' },
+              { icon: FiHeart, label: 'Saved Items', value:  stats?.active_listings ?? 0, to: '/marketplace', color: '#8b5cf6' },
+              { icon: FiMessageCircle, label: 'Messages', value:stats?.unread_messages ?? 0, to: '/messages', color: 'var(--color-green)' },
             ].map((s) => (
               <button
                 key={s.label}
@@ -137,7 +190,7 @@ export default function Dashboard() {
                       onClick={() => handleConfirmDelivery(activePurchase.id)}
                       type="button"
                     >
-                      Confirm
+                     {confirming ? "Confirming..." : "Confirm"}
                     </button>
                   </div>
                 )}
@@ -162,7 +215,7 @@ export default function Dashboard() {
 
             {loading ? (
               <LoadingState type="grid" count={4} />
-            ) : recentItems.length === 0 ? (
+            ) : !recent_listings || recent_listings.length === 0 ? (
               <EmptyState
                 icon={FiShoppingBag}
                 title="No listings yet"
@@ -172,10 +225,17 @@ export default function Dashboard() {
               />
             ) : (
               <div className="dashboard__items-grid">
-                {recentItems.slice(0, 4).map((item) => (
+                {recent_listings.slice(0, 4).map((item) => (
                   <ItemCard
                     key={item.id}
-                    item={item}
+                    item={{
+                      ...item,
+                      imageUrl:       item.image_url,
+                      sellerName:     item.seller_name,
+                      sellerVerified: item.seller_verified,
+                      savedCount:     item.saved_count,
+                      viewCount:      item.view_count,
+                    }}
                     onView={(item) => navigate(`/item/${item.id}`)}
                     onSave={handleSaveItem}
                     isSaved={savedItems.has(item.id)}

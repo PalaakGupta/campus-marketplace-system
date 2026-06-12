@@ -3,7 +3,7 @@ import { FiBell, FiCheckCircle, FiShoppingBag, FiMessageCircle, FiTag } from "re
 import PageHeader from "../../components/layout/PageHeader/PageHeader";
 import LoadingState from "../../components/ui/LoadingState/LoadingState";
 import EmptyState from "../../components/ui/EmptyState/EmptyState";
-import { getNotifications, markNotificationsRead } from "../services/userService/";
+import  {markNotificationsRead, getNotifications } from "../../services/userService";
 import "./Notifications.css";
 
 const NOTIF_ICONS = {

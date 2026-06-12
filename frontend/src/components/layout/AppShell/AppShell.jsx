@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar/Sidebar';
-import BottomNav from './BottomNav/BottomNav';
+import Sidebar from '../Sidebar/Sidebar';
+import BottomNav from '../BottomNav/BottomNav';
 import "./AppShell.css";
 
 export default function AppShell({ user, unreadCount }) {

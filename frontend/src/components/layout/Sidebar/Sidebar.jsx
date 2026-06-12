@@ -7,13 +7,13 @@ import {
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { to: "/",             icon: FiHome,          label: "Dashboard" },
-  { to: "/marketplace",  icon: FiShoppingBag,   label: "Marketplace" },
-  { to: "/my-listings",  icon: FiPackage,       label: "My Listings" },
-  { to: "/purchases",    icon: FiTag,           label: "Purchases" },
-  { to: "/wallet",       icon: FiDollarSign,    label: "Wallet" },
-  { to: "/messages",     icon: FiMessageCircle, label: "Messages", badge: true },
-  { to: "/profile",      icon: FiUser,          label: "Profile" },
+  { to: "/", icon: FiHome, label: "Dashboard" },
+  { to: "/marketplace", icon: FiShoppingBag, label: "Marketplace" },
+  { to: "/my-listings", icon: FiPackage, label: "My Listings" },
+  { to: "/purchases", icon: FiTag, label: "Purchases" },
+  { to: "/wallet", icon: FiDollarSign, label: "Wallet" },
+  { to: "/messages", icon: FiMessageCircle, label: "Messages", badge: true },
+  { to: "/profile", icon: FiUser, label: "Profile" },
 ];
 
 export default function Sidebar({ user, unreadCount = 0 }) {
@@ -66,7 +66,7 @@ export default function Sidebar({ user, unreadCount = 0 }) {
           <div className="sidebar__user-info">
             <p className="sidebar__user-name">{user.name}</p>
             <p className="sidebar__user-balance">
-              ₵{Number(user.availableBalance ?? 0).toLocaleString()}
+              ₹{Number(user.availableBalance ?? 0).toLocaleString()}
             </p>
           </div>
           <FiChevronRight size={14} className="sidebar__user-arrow" />
