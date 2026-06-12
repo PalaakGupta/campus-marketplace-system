@@ -1,81 +1,135 @@
-import React, { useState } from 'react';
-import './Login.css';
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FiShield, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
+import { useAuth } from "../../context/AuthContext";
+import "./Login.css";
 
-const LoginForm = () => {
-  const [loginId, setLoginId] = useState('');
-  const [password, setPassword] = useState('');
-  const [status, setStatus] = useState({ type: '', message: '' }); 
+export default function Login() {
+  const navigate          = useNavigate();
+  const location          = useLocation();
+  const { login, loading: authLoading } = useAuth();
 
-  const handleSubmit = (e) => {
+  const [loginId, setLoginId]   = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+
+  // Where to redirect after login (default: dashboard)
+  const from = location.state?.from || "/dashboard";
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ type: '', message: '' });
+    setError("");
 
-    // 1. Validation Cause: Empty fields
-    if (!loginId || !password) {
-      setStatus({ type: 'error', message: 'Login failed: All fields are required.' });
+    if (!loginId.trim()) {
+      setError("Login ID is required");
+      return;
+    }
+    if (!password.trim()) {
+      setError("Password is required");
       return;
     }
 
-    // 3. Validation Cause: Password strength
-    if (password.length < 6) {
-      setStatus({ type: 'error', message: 'Login failed: Password must be at least 6 characters long.' });
-      return;
+    try {
+      setLoading(true);
+      await login(loginId.trim(), password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      const msg =
+        err?.response?.data?.detail?.message ||
+        err?.response?.data?.error?.message ||
+        "Invalid login ID or password";
+      setError(typeof msg === "string" ? msg : "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // Simulated Success 
-    setStatus({ 
-      type: 'success', 
-      message: 'Login Successful! Welcome to the Campus Marketplace. Redirecting...' 
-    });
   };
 
   return (
-    <div className="login-wrapper">
-      {/* Dynamic class assigns standard, success (green), or error (red) shadows */}
-      <div className={`login-container ${status.type}`}>
-        <div className="marketplace-logo">🎓</div>
-        <h2>Campus Secure Marketplace</h2>
-        <p className="subtitle">Buy & Sell with verified students and staff</p>
+    <div className="login-page">
+      <div className="login-card">
+        {/* Logo */}
+        <div className="login-logo">
+          <div className="login-logo-icon">
+            <FiShield size={26} />
+          </div>
+          <div>
+            <p className="login-logo-title">Campus</p>
+            <p className="login-logo-sub">Secure Marketplace</p>
+          </div>
+        </div>
 
-        {/* Custom Window Messages instead of alerts */}
-        {status.message && (
-          <div className={`window-message ${status.type}-message`}>
-            {status.message}
+        <h1 className="login-heading">Welcome back</h1>
+        <p className="login-sub">Sign in to your campus account</p>
+
+        {/* Error banner */}
+        {error && (
+          <div className="login-error">
+            <FiAlertCircle size={15} />
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="input-group">
-            <label htmlFor="loginId">Login Id</label>
-            <input 
-              type="text" 
-              id="loginId" 
-              placeholder=""
-              value={loginId} 
-              onChange={(e) => setLoginId(e.target.value)} 
-            />
-          </div>
-          
-          <div className="input-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              placeholder=""
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Login ID  */}
+          <div className="field-group" style={{ marginBottom: 14 }}>
+            <label className="field-label" htmlFor="login-id">
+              Login ID
+            </label>
+            <input
+              id="login-id"
+              type="text"
+              className="input-field"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              autoComplete="username"
+              autoFocus
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="login-button">Sign In</button>
+          {/* Password */}
+          <div className="field-group" style={{ marginBottom: 20 }}>
+            <label className="field-label" htmlFor="password">
+              Password
+            </label>
+            <div className="login-password-wrap">
+              <input
+                id="password"
+                type={showPass ? "text" : "password"}
+                className="input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="login-eye-btn"
+                onClick={() => setShowPass((s) => !s)}
+                aria-label={showPass ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPass ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading || authLoading}
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
         </form>
 
-        <div className="form-footer">
-          <a href="#forgot">Forgot Password?</a>
+        <div className="login-footer">
+          <p>Campus Community Marketplace</p>
+          <p>Secure · Trusted · Protected</p>
         </div>
       </div>
     </div>
   );
-};
-
-export default LoginForm;
+}
