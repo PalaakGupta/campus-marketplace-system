@@ -619,7 +619,7 @@ def get_dashboard(db: Session, current_user: models.User) -> dict:
     ).count()
 
     # Active purchase (most recent holding record as buyer)
-    active_purchase = None
+    activePurchase = None
     holding = db.query(models.HoldingRecord).filter(
         models.HoldingRecord.buyer_id == current_user.id,
         models.HoldingRecord.status   == models.HoldingStatus.holding
@@ -628,7 +628,7 @@ def get_dashboard(db: Session, current_user: models.User) -> dict:
     if holding:
         item   = get_item_by_id(db, holding.item_id)
         seller = get_user_by_id(db, holding.seller_id)
-        active_purchase = {
+        activePurchase = {
             "purchase_id"    : holding.id,
             "item_id"        : item.id,
             "title"          : item.title,
@@ -689,7 +689,7 @@ def get_dashboard(db: Session, current_user: models.User) -> dict:
             "completed_sales" : completed_sales,
             "total_purchases" : total_purchases
         },
-        "active_purchase" : active_purchase,
+        "activePurchase" : activePurchase,
         "recent_listings" : recent_listings
     }
 

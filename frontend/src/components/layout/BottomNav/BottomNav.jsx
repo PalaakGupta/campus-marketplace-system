@@ -9,7 +9,7 @@ import {
 import './BottomNav.css';
 
 const NAV_ITEMS = [
-  { to: '/',            icon: FiHome,          label: 'Home' },
+  { to: '/dashboard',   icon: FiHome,          label: 'Home' },
   { to: '/marketplace', icon: FiShoppingBag,   label: 'Market' },
   { to: '/list-item',   icon: FiPlus,          label: 'Sell',   isSell: true },
   { to: '/messages',    icon: FiMessageCircle, label: 'Chat' },

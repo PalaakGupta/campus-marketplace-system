@@ -6,7 +6,7 @@ import API from "./api";
  */
 export async function getItems(params = {}) {
   const response = await API.get("/items", { params });
-  const [confirming, setConfirming] = useState(false);
+  return response.data.data ?? response.data;
 }
 
 /**
@@ -14,7 +14,7 @@ export async function getItems(params = {}) {
  */
 export async function getItemById(itemId) {
   const response = await API.get(`/items/${itemId}`);
-  const [confirming, setConfirming] = useState(false);
+  return response.data.data ?? response.data;
 }
 
 /**
@@ -23,13 +23,19 @@ export async function getItemById(itemId) {
  */
 export async function createItem(itemData) {
   const sellerId = localStorage.getItem("user_id");
-  const response = await API.post("/items", {
-    ...itemData,
-    seller_id: sellerId,
-  });
-  return response.data.data ?? response.data;
-}
 
+  try {
+    const response = await API.post(
+      `/items/?seller_id=${sellerId}`,
+      itemData
+    );
+
+    return response.data;
+  } catch (err) {
+    console.log("FASTAPI ERROR =", err.response?.data);
+    throw err;
+  }
+}
 /**
  * PATCH /items/{item_id}
  * Edit an existing listing.

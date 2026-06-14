@@ -66,7 +66,7 @@ export default function ItemCard({
         >
           <FiHeart size={15} />
         </button>
-        {item.channel === "Thrift Store" && (
+        {item.channel === "thrift Store" && (
           <span className="item-card__thrift-badge">THRIFT</span>
         )}
       </div>

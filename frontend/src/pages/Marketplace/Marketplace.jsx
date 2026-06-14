@@ -23,8 +23,8 @@ const CATEGORIES = [
 
 const CHANNEL_TABS = [
   { id: 'All',         label: 'All Channels' },
-  { id: 'Marketplace', label: 'Marketplace' },
-  { id: 'Thrift Store',label: 'Thrift Store' },
+  { id: 'marketplace', label: 'Marketplace' },
+  { id: 'thrift Store',label: 'Thrift Store' },
 ];
 
 export default function Marketplace() {
@@ -124,6 +124,8 @@ export default function Marketplace() {
     savedCount:     item.saved_count     ?? item.savedCount     ?? 0,
     viewCount:      item.view_count      ?? item.viewCount      ?? 0,
   });
+
+  const resultCount = items ? items.length : 0;
 
   return (
     <div className="marketplace page">

@@ -5,6 +5,7 @@ import API from "./api";
  * Returns available balance, held balance, and active holds.
  */
 export async function getWalletSummary() {
+    const userId = localStorage.getItem("user_id");
     const response = await API.get("/wallet/summary");
     return response.data.data ?? response.data;
 }
@@ -19,16 +20,15 @@ export async function getWalletByUserId(userId) {
 }
 
 /**
- * POST /wallet/{user_id}/topup
+ * POST /wallet/{user_id}/sync
  * Add funds to wallet.
  */
-export async function topUpWallet(amount) {
+export async function topUpWallet() {
     const userId = localStorage.getItem("user_id");
-    const response = await API.post(`/wallet/${userId}/topup`, {
-        amount: Number(amount),
-    });
+    const response = await API.post(`/wallet/${userId}/sync`);
     return response.data.data ?? response.data;
 }
+
 
 /**
  * GET /wallet/transactions

@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { getWalletSummary } from "../services/walletService";
 
 export function useWallet() {
-  const [wallet, setWallet]   = useState(null);
+  const [wallet, setWallet] = useState({
+    available_balance: 0,
+    held_balance: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
@@ -10,8 +13,14 @@ export function useWallet() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getWalletSummary();
-      setWallet(data);
+    const response = await getWalletSummary();
+    setWallet(
+      response?.data ??
+      response ?? {
+        available_balance: 0,
+        held_balance: 0,
+      }
+    );
     } catch (err) {
       setError(err?.response?.data?.error?.message || "Failed to load wallet");
     } finally {

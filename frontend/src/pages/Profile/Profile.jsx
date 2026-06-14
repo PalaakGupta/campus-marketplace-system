@@ -64,12 +64,6 @@ export default function Profile() {
     },
     {
       items: [
-        { icon: FiSettings, label: 'Account Settings', to: '/settings' },
-        { icon: FiShield, label: 'Privacy & Security', to: '/security' },
-      ],
-    },
-    {
-      items: [
         { icon: FiLogOut, label: 'Sign Out', action: handleLogout, danger: true },
       ],
     },

@@ -7,7 +7,7 @@ import {
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { to: "/", icon: FiHome, label: "Dashboard" },
+  { to: "/dashboard", icon: FiHome, label: "Dashboard" },
   { to: "/marketplace", icon: FiShoppingBag, label: "Marketplace" },
   { to: "/my-listings", icon: FiPackage, label: "My Listings" },
   { to: "/purchases", icon: FiTag, label: "Purchases" },

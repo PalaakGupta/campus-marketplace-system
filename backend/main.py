@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db import engine, Base
-import models
 from routers import (
     users, items, transactions, wallet, chat,
     dashboard, saved_items, wallet_summary,

@@ -36,7 +36,7 @@ const INITIAL_FORM = {
   title: '',
   category: '',
   condition: '',
-  channel: 'Marketplace',
+  channel: 'marketplace',
   description: '',
   price: '',
   images: [],
@@ -73,7 +73,7 @@ function hasErrors(errors) {
 
 export default function ListItem() {
   const navigate = useNavigate();
-  const fileRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -131,7 +131,10 @@ export default function ListItem() {
         price:           parseInt(form.price, 10),
         category:        form.category,
         condition:       form.condition,
-        listing_channel: form.channel,
+        listing_channel:
+          form.channel === "Thrift Store"
+            ? "thrift_store"
+            : "marketplace",
       });
 
       const listingId = listingData.id || listingData.data?.id;
@@ -335,8 +338,8 @@ export default function ListItem() {
                 <label className="field-label">Listing Channel</label>
                 <div className="list-item__channel-grid">
                   {[
-                    { id: 'Marketplace', emoji: '🏪', desc: 'Standard listings' },
-                    { id: 'Thrift Store', emoji: '♻️', desc: 'Budget friendly' },
+                    { id: 'marketplace', emoji: '🏪', desc: 'Standard listings' },
+                    { id: 'thrift Store', emoji: '♻️', desc: 'Budget friendly' },
                   ].map((ch) => (
                     <button
                       key={ch.id}
@@ -420,7 +423,7 @@ export default function ListItem() {
                   ? <img src={form.images[0].url} alt={form.title} className="list-item__preview-image" />
                   : <div className="list-item__preview-image-placeholder" />
                 }
-                {form.channel === 'Thrift Store' && (
+                {form.channel === 'thrift Store' && (
                   <span className="list-item__preview-thrift">THRIFT STORE</span>
                 )}
               </div>

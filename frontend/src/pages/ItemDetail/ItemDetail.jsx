@@ -13,7 +13,7 @@ import { purchaseItem } from "../../services/purchaseService";
 import { getWalletSummary } from "../../services/walletService";
 import './ItemDetail.css';
 
-function PurchaseSheet({ item, onClose, onConfirm, userBalance,purchasing }) {
+function PurchaseSheet({ item, onClose, onConfirm, userBalance, purchasing }) {
   const price = Number(item?.price ?? 0);
   const balance = Number(userBalance ?? 0);
   const remaining = balance - price;
@@ -29,14 +29,14 @@ function PurchaseSheet({ item, onClose, onConfirm, userBalance,purchasing }) {
         {/* Item Summary */}
         <div className="purchase-sheet__item-row">
           <div className="purchase-sheet__item-image-wrap">
-            {item?.imageUrl 
+            {item?.imageUrl
               ? <img src={item.imageUrl} alt={item.title} className="purchase-sheet__item-image" />
               : <div className="purchase-sheet__item-image-placeholder" />
             }
           </div>
           <div className="purchase-sheet__item-info">
             <p className="purchase-sheet__item-title">{item?.title}</p>
-            <p className="purchase-sheet__item-meta">{item?.condition} · {item?.sellerName }</p>
+            <p className="purchase-sheet__item-meta">{item?.condition} · {item?.sellerName}</p>
             <p className="purchase-sheet__item-price">₹{price.toLocaleString()}</p>
           </div>
         </div>
@@ -123,19 +123,19 @@ export default function ItemDetail() {
         // Normalize field names
         const normalized = {
           ...itemData,
-          imageUrl:       itemData.image_url || itemData.imageUrl,
-          sellerName:     itemData.seller?.name || itemData.seller_name,
-          sellerRole:     itemData.seller?.role || itemData.seller_role,
+          imageUrl: itemData.image_url || itemData.imageUrl,
+          sellerName: itemData.seller?.name || itemData.seller_name,
+          sellerRole: itemData.seller?.role || itemData.seller_role,
           sellerVerified: itemData.seller?.is_verified ?? itemData.seller_verified ?? false,
-          savedCount:     itemData.saved_count ?? itemData.savedCount ?? 0,
-          viewCount:      itemData.view_count  ?? itemData.viewCount  ?? 0,
-          isOwnListing:   (itemData.seller?.id || itemData.seller_id) === currentUserId,
+          savedCount: itemData.saved_count ?? itemData.savedCount ?? 0,
+          viewCount: itemData.view_count ?? itemData.viewCount ?? 0,
+          isOwnListing: (itemData.seller?.id || itemData.seller_id) === currentUserId,
         };
         setItem(normalized);
         setIsSaved(itemData.is_saved ?? false);
         setUserBalance(walletData?.available_balance ?? null);
 
-        incrementView(id).catch(() => {});
+        incrementView(id).catch(() => { });
       } catch (err) {
         setError(err?.response?.data?.error?.message || "Failed to load item");
       } finally {
@@ -147,14 +147,14 @@ export default function ItemDetail() {
 
   const handleSave = async () => {
     setIsSaved((s) => !s);
-    try{
+    try {
       if (isSaved) {
         await unsaveItem(id);
       } else {
         await saveItem(id);
       }
-    }catch{
-      setIsSaved((s)=> !s);
+    } catch {
+      setIsSaved((s) => !s);
     }
   };
 
@@ -167,7 +167,7 @@ export default function ItemDetail() {
       navigate("/purchases");
     } catch (err) {
       const code = err?.response?.data?.error?.code;
-      const msg  = err?.response?.data?.error?.message || "Purchase failed";
+      const msg = err?.response?.data?.error?.message || "Purchase failed";
       setPurchaseError({ code, message: msg });
 
       // Refresh item status if reserved/sold by someone else
@@ -215,7 +215,7 @@ export default function ItemDetail() {
     );
   }
 
-  const canBuy = item.status === 'available' ;
+  const canBuy = item.status === 'available';
   const isOwn = item.isOwnListing;
 
   return (
@@ -246,7 +246,7 @@ export default function ItemDetail() {
         </div>
         <div className="item-detail__hero-badges">
           <StatusBadge status={item.status} size="md" />
-          {(item.channel === 'Thrift Store' || item.listing_channel === 'thrift_store') && (
+          {(item.channel === 'thrift Store' || item.listing_channel === 'thrift_store') && (
             <span className="item-detail__thrift-badge">THRIFT STORE</span>
           )}
         </div>
@@ -307,7 +307,7 @@ export default function ItemDetail() {
         </div>
 
         {/* Status-specific alerts */}
-        {(item.status === 'Reserved' || item.status === "reserved" )&& (
+        {(item.status === 'Reserved' || item.status === "reserved") && (
           <div className="item-detail__alert item-detail__alert--warning">
             <FiAlertCircle size={17} />
             <div>
@@ -319,7 +319,7 @@ export default function ItemDetail() {
           </div>
         )}
 
-        {(item.status === 'Sold' || item.status === "sold")&& (
+        {(item.status === 'Sold' || item.status === "sold") && (
           <div className="item-detail__alert item-detail__alert--neutral">
             <FiTag size={17} />
             <div>
@@ -366,13 +366,13 @@ export default function ItemDetail() {
 
       {/* ── Purchase Sheet ── */}
       {showPurchase && (
-      <PurchaseSheet
-        item={item}
-        userBalance={userBalance}
-        onClose={() => setShowPurchase(false)}
-        onConfirm={handleConfirmPurchase}
-        purchasing={purchasing}
-      />
+        <PurchaseSheet
+          item={item}
+          userBalance={userBalance}
+          onClose={() => setShowPurchase(false)}
+          onConfirm={handleConfirmPurchase}
+          purchasing={purchasing}
+        />
       )}
     </div>
   );

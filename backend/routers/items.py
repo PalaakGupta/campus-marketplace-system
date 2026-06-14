@@ -20,7 +20,7 @@ router = APIRouter(
 )
 def create_item(
     payload: schemas.ItemCreate,
-    seller_id: int = Query(..., gt=0, description="ID of the seller"),
+    seller_id: int = Query(..., description="ID of the seller"),
     db: Session = Depends(get_db)
 ):
     return services.create_item(db, seller_id, payload)

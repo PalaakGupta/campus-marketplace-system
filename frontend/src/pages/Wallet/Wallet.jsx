@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiPlus, FiCheckCircle, FiLock, FiShoppingBag,
@@ -43,8 +43,8 @@ export default function Wallet() {
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getWalletSummary();
-      setWalletData(data);
+      const response = await getWalletSummary();
+      setWalletData(response?.data || response);
     } catch (err) {
       console.error("Wallet fetch error:", err);
     } finally {
@@ -52,7 +52,7 @@ export default function Wallet() {
     }
   }, []);
 
-   const fetchTransactions = useCallback(async (type) => {
+  const fetchTransactions = useCallback(async (type) => {
     try {
       setTxLoading(true);
       const data = await getTransactions(type);
@@ -65,8 +65,8 @@ export default function Wallet() {
     }
   }, []);
 
-  useEffect(()=>{fetchWallet();},[fetchWallet]);
-  useEffect(()=>{fetchTransactions(activeTab);},[activeTab, fetchTransactions]);
+  useEffect(() => { fetchWallet(); }, [fetchWallet]);
+  useEffect(() => { fetchTransactions(activeTab); }, [activeTab, fetchTransactions]);
 
   const handleConfirmDelivery = async (purchaseId) => {
     try {
@@ -81,11 +81,9 @@ export default function Wallet() {
   };
 
   const handleTopUp = async () => {
-    const amount = parseInt(topUpAmount, 10);
-    if (!amount || amount <= 0) return;
     try {
       setToppingUp(true);
-      await topUpWallet(amount);
+      await topUpWallet();
       setTopUpAmount("");
       setShowTopUp(false);
       await fetchWallet();
@@ -99,6 +97,8 @@ export default function Wallet() {
   const formatAmount = (n) =>
     n !== undefined && n !== null ? `₹${Number(n).toLocaleString()}` : '₹—';
 
+  console.log("walletData =", walletData);
+  
   return (
     <div className="wallet page anim-fade-in">
       {/* ── Hero ── */}
@@ -115,7 +115,7 @@ export default function Wallet() {
           <div className="wallet__hero-balance">
             <p className="wallet__hero-label">Total Available Balance</p>
             <p className="wallet__hero-amount">
-              {formatAmount(walletData?.available_Balance)}
+              {formatAmount(walletData?.available_balance)}
             </p>
             <p className="wallet__hero-sub">Campus Credit Balance</p>
           </div>
@@ -128,7 +128,7 @@ export default function Wallet() {
             {
               icon: FiCheckCircle,
               label: 'Available',
-              value: formatAmount(walletData?.available_Balance),
+              value: formatAmount(walletData?.available_balance),
               desc: 'Ready to spend',
               color: 'var(--color-green)',
               bg: 'var(--color-green-soft)',
