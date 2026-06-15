@@ -98,9 +98,6 @@ export default function Wallet() {
 
   const formatAmount = (n) =>
     n !== undefined && n !== null ? `₹${Number(n).toLocaleString()}` : '₹—';
-
-  console.log("walletData =", walletData);
-  
   return (
     <div className="wallet page anim-fade-in">
       {/* ── Hero ── */}

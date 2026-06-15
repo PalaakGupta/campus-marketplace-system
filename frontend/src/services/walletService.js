@@ -5,8 +5,7 @@ import API from "./api";
  * Returns available balance, held balance, and active holds.
  */
 export async function getWalletSummary() {
-    const userId = localStorage.getItem("user_id");
-    const response = await API.get(`/wallet/${user_id}`);
+    const response = await API.get("/wallet/summary");
     return response.data.data ?? response.data;
 }
 
