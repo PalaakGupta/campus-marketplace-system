@@ -207,7 +207,7 @@ def get_items(
     return query.all()
 
 
-def get_item_by_id(db: Session, item_id: int) -> models.Item:
+def get_item_by_id(db: Session, item_id: str) -> models.Item:
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if not item:
         raise HTTPException(
@@ -439,7 +439,7 @@ def get_holding_records(
 
 def validate_chat_participant(
     db: Session,
-    item_id: int,
+    item_id: str,
     user_id: int
 ) -> bool:
     """
@@ -479,7 +479,7 @@ def validate_chat_participant(
 
 def save_message(
     db: Session,
-    item_id: int,
+    item_id: str,
     payload: schemas.MessageCreate
 ) -> models.Message:
     """
@@ -514,7 +514,7 @@ def save_message(
 
 def get_chat_history(
     db: Session,
-    item_id: int,
+    item_id: str,
     user_id: int
 ) -> list[models.Message]:
     """

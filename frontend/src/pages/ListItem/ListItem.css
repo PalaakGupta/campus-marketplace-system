@@ -235,36 +235,6 @@
   border-radius: 4px;
 }
 
-/* Dropzone */
-.list-item__dropzone {
-  border: 2px dashed var(--color-border);
-  border-radius: 14px;
-  padding: 28px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--transition);
-  color: var(--color-text-sec);
-}
-.list-item__dropzone:hover {
-  border-color: var(--color-blue);
-  background: var(--color-blue-soft);
-  color: var(--color-blue);
-}
-
-.list-item__dropzone-title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.list-item__dropzone-sub {
-  font-size: 12px;
-  color: var(--color-text-hint);
-}
-
 /* Form */
 .list-item__form {
   display: flex;

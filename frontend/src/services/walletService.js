@@ -6,7 +6,7 @@ import API from "./api";
  */
 export async function getWalletSummary() {
     const userId = localStorage.getItem("user_id");
-    const response = await API.get("/wallet/summary");
+    const response = await API.get(`/wallet/${user_id}`);
     return response.data.data ?? response.data;
 }
 

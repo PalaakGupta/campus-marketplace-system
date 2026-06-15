@@ -25,7 +25,7 @@ class ConnectionManager:
         # { item_id: [websocket, websocket, ...] }
         self.active: Dict[int, List[WebSocket]] = {}
 
-    async def connect(self, item_id: int, websocket: WebSocket):
+    async def connect(self, item_id: str, websocket: WebSocket):
         await websocket.accept()
         if item_id not in self.active:
             self.active[item_id] = []

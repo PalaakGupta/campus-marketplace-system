@@ -5,7 +5,7 @@ import API from "./api";
  * Optional query params for filtering.
  */
 export async function getItems(params = {}) {
-  const response = await API.get("/items", { params });
+  const response = await API.get("/items/", { params });
   return response.data.data ?? response.data;
 }
 

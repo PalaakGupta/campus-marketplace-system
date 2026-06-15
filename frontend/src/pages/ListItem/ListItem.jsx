@@ -256,19 +256,7 @@ export default function ListItem() {
                 </button>
               )}
             </div>
-
-            {/* Drag & Drop zone */}
-            {form.images.length < 5 && (
-              <div
-                className="list-item__dropzone"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <FiUpload size={26} />
-                <p className="list-item__dropzone-title">Drag & Drop Photos</p>
-                <p className="list-item__dropzone-sub">or tap to browse your gallery · Max 5 photos</p>
-              </div>
-            )}
-
+            
             <input
               ref={fileInputRef}
               type="file"
