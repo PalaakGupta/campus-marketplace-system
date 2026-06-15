@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db import engine, Base
+from admin.admin_router import router as admin_router
+from admin import admin_models
 from routers import (
     users, items, transactions, wallet, chat,
     dashboard, saved_items, wallet_summary,
@@ -30,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # ─────────────────────────────────────────────────────────────
-
+admin_models.Base.metadata.create_all(bind=engine)
 app.include_router(users.router)
 app.include_router(wallet_summary.router)
 app.include_router(wallet.router)
@@ -40,7 +42,7 @@ app.include_router(transactions.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
 app.include_router(saved_items.router)
-
+app.include_router(admin_router)
 app.include_router(my_purchases.router)
 app.include_router(notifications.router)
 app.include_router(profile.router)

@@ -21,7 +21,7 @@ ALGORITHM     = "HS256"
 TOKEN_MINUTES = 480
 
 
-# ── Auth helpers ──────────────────────────────────────────────
+#  Auth helpers 
 
 def _hash_pw(plain: str) -> str:
     return _pwd_ctx.hash(plain)
@@ -53,7 +53,7 @@ def decode_admin_token(token: str) -> dict:
         )
 
 
-# ── Seed first admin (run once) ───────────────────────────────
+#  Seed first admin 
 
 def seed_admin(db: Session, admin_id: str, name: str,
                email: str, password: str) -> AdminUser:
@@ -72,7 +72,7 @@ def seed_admin(db: Session, admin_id: str, name: str,
     return admin
 
 
-# ── Login ─────────────────────────────────────────────────────
+#  Login 
 
 def admin_login(db: Session,
                 payload: aschemas.AdminLoginRequest) -> dict:
@@ -108,7 +108,7 @@ def admin_login(db: Session,
     }
 
 
-# ── Dashboard Stats ───────────────────────────────────────────
+#  Dashboard Stats 
 
 def get_admin_dashboard(db: Session) -> dict:
     today = datetime.utcnow().replace(
@@ -166,7 +166,7 @@ def get_admin_dashboard(db: Session) -> dict:
     }
 
 
-# ── User Management ───────────────────────────────────────────
+#  User Management 
 
 def admin_list_users(db: Session, page: int = 1,
                      page_size: int = 20, search: str = None,
@@ -273,7 +273,7 @@ def admin_toggle_user_status(db: Session, user_id: str,
     }
 
 
-# ── Listing Management ────────────────────────────────────────
+# Listing Management 
 
 def admin_list_items(db: Session, page: int = 1,
                      page_size: int = 20, status_filter: str = None,
@@ -356,7 +356,7 @@ def admin_delete_item(db: Session, item_id: str,
     return {"item_id": item_id, "message": "Listing removed successfully."}
 
 
-# ── Transaction Management ────────────────────────────────────
+#  Transaction Management 
 
 def admin_list_purchases(db: Session, page: int = 1,
                           page_size: int = 20,
@@ -490,7 +490,7 @@ def admin_issue_refund(db: Session, holding_id: str,
     }
 
 
-# ── Notification Management ───────────────────────────────────
+#  Notification Management 
 
 def admin_send_notification(db: Session,
                              payload: aschemas.AdminSendNotificationRequest,
@@ -566,7 +566,7 @@ def admin_get_notifications(db: Session,
     }
 
 
-# ── Reports Management ────────────────────────────────────────
+#  Reports Management 
 
 def admin_list_reports(db: Session, page: int = 1,
                         page_size: int = 20,
