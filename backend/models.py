@@ -37,11 +37,11 @@ class ListingChannel(str, enum.Enum):
 
 
 class ItemCondition(str, enum.Enum):
-    new       = "New"
-    like_new  = "Like New"
-    good      = "Good"
-    fair      = "Fair"
-    poor      = "Poor"
+    new      = "New"
+    like_new = "Like New"
+    good     = "Good"
+    fair     = "Fair"
+    poor     = "Poor"
 
 
 class HoldingStatus(str, enum.Enum):

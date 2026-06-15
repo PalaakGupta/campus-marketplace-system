@@ -32,14 +32,15 @@ app.add_middleware(
 # ─────────────────────────────────────────────────────────────
 
 app.include_router(users.router)
+app.include_router(wallet_summary.router)
 app.include_router(wallet.router)
+app.include_router(my_listings.router)
 app.include_router(items.router)
 app.include_router(transactions.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
 app.include_router(saved_items.router)
-app.include_router(wallet_summary.router)
-app.include_router(my_listings.router)
+
 app.include_router(my_purchases.router)
 app.include_router(notifications.router)
 app.include_router(profile.router)

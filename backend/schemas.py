@@ -93,8 +93,8 @@ class WalletBase(BaseModel):
 
 
 class WalletResponse(WalletBase):
-    id:         int
-    user_id:    int
+    id:         str
+    user_id:    str
     created_at: datetime
     updated_at: datetime
 
@@ -124,8 +124,8 @@ class ItemCreate(ItemBase):
 
 
 class ItemResponse(ItemBase):
-    id:         int
-    seller_id:  int
+    id:         str
+    seller_id:  str
     status:     ItemStatus
     created_at: datetime
     updated_at: datetime
@@ -137,14 +137,14 @@ class ItemResponse(ItemBase):
 # PURCHASE SCHEMAS
 
 class PurchaseRequest(BaseModel):
-    buyer_id: int = Field(..., gt=0)
-    item_id:  int = Field(..., gt=0)
+    buyer_id: str = Field(..., gt=0)
+    item_id:  str = Field(..., gt=0)
 
 
 class PurchaseResponse(BaseModel):
     message:           str
-    holding_record_id: int
-    item_id:           int
+    holding_record_id: str
+    item_id:           str
     amount:            Decimal = Field(..., max_digits=12, decimal_places=2)    
     status:            HoldingStatus
 
@@ -155,14 +155,14 @@ class PurchaseResponse(BaseModel):
 # DELIVERY CONFIRMATION SCHEMAS
 
 class DeliveryConfirmRequest(BaseModel):
-    buyer_id:          int = Field(..., gt=0)
-    holding_record_id: int = Field(..., gt=0)
+    buyer_id:          str = Field(..., gt=0)
+    holding_record_id: str = Field(..., gt=0)
 
 
 class DeliveryConfirmResponse(BaseModel):
     message:           str
-    holding_record_id: int
-    transaction_id:    int
+    holding_record_id: str
+    transaction_id:    str
     amount_released:   Decimal = Field(..., max_digits=12, decimal_places=2)
 
     class Config:
@@ -173,10 +173,10 @@ class DeliveryConfirmResponse(BaseModel):
 # HOLDING RECORD SCHEMAS
 
 class HoldingRecordResponse(BaseModel):
-    id:         int
-    item_id:    int
-    buyer_id:   int
-    seller_id:  int
+    id:         str
+    item_id:    str
+    buyer_id:   str
+    seller_id:  str
     amount:     Decimal = Field(..., max_digits=12, decimal_places=2)
     status:     HoldingStatus
     created_at: datetime
@@ -188,10 +188,10 @@ class HoldingRecordResponse(BaseModel):
 # TRANSACTION SCHEMAS
 
 class TransactionResponse(BaseModel):
-    id:                int
-    holding_record_id: int
-    from_user_id:      int
-    to_user_id:        int
+    id:                str
+    holding_record_id: str
+    from_user_id:      str
+    to_user_id:        str
     amount:            Decimal = Field(..., max_digits=12, decimal_places=2)
     transaction_type:  TransactionType
     created_at:        datetime
@@ -202,14 +202,14 @@ class TransactionResponse(BaseModel):
 # CHAT / MESSAGE SCHEMAS
 
 class MessageCreate(BaseModel):
-    sender_id: int  = Field(..., gt=0)
+    sender_id: str  = Field(..., gt=0)
     content:   str  = Field(..., min_length=1, max_length=2000)
 
 
 class MessageResponse(BaseModel):
-    id:         int
-    item_id:    int
-    sender_id:  int
+    id:         str
+    item_id:    str
+    sender_id:  str
     content:    str
     created_at: datetime
 

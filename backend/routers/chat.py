@@ -35,12 +35,12 @@ class ConnectionManager:
             f"total_connections={len(self.active[item_id])}"
         )
 
-    def disconnect(self, item_id: int, websocket: WebSocket):
+    def disconnect(self, item_id: str, websocket: WebSocket):
         if item_id in self.active:
             self.active[item_id].remove(websocket)
         logger.info(f"WebSocket disconnected: item_id={item_id}")
 
-    async def broadcast(self, item_id: int, message: dict):
+    async def broadcast(self, item_id: str, message: dict):
         if item_id not in self.active:
             return
         for connection in self.active[item_id]:
@@ -53,9 +53,9 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/{item_id}")
 async def websocket_chat(
-    item_id: int,
+    item_id: str,
     websocket: WebSocket,
-    sender_id: int = Query(..., gt=0)
+    sender_id: str = Query(..., gt=0)
 ):
     """
     Connect to the chat room for a specific item.
@@ -103,8 +103,8 @@ async def websocket_chat(
     summary="Get chat history for an item"
 )
 def get_chat_history(
-    item_id:  int,
-    user_id:  int = Query(..., gt=0),
+    item_id:  str,
+    user_id:  str = Query(..., gt=0),
     db: Session = Depends(get_db)
 ):
     return services.get_chat_history(db, item_id, user_id)

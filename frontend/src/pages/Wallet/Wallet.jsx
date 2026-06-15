@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   FiPlus, FiCheckCircle, FiLock, FiShoppingBag,
-  FiRepeat, FiArrowDownLeft, FiAlertCircle,
+  FiRepeat, FiArrowDownLeft,
 } from 'react-icons/fi';
-import PageHeader from '../../components/layout/PageHeader/PageHeader';
+
 import TabBar from '../../components/ui/TabBar/TabBar';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
@@ -27,11 +27,11 @@ const TX_ICON = {
 };
 
 export default function Wallet() {
-  const navigate = useNavigate();
+  
 
   const [walletData, setWalletData] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [activeHolds, setActiveHolds] = useState([]);
+
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
@@ -65,7 +65,9 @@ export default function Wallet() {
     }
   }, []);
 
-  useEffect(() => { fetchWallet(); }, [fetchWallet]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchWallet(); }, []);
+// eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchTransactions(activeTab); }, [activeTab, fetchTransactions]);
 
   const handleConfirmDelivery = async (purchaseId) => {
@@ -136,7 +138,7 @@ export default function Wallet() {
             {
               icon: FiLock,
               label: 'In Vault',
-              value: formatAmount(walletData?.held_Balance),
+              value: formatAmount(walletData?.held_balance),
               desc: 'Awaiting confirmation',
               color: 'var(--color-orange)',
               bg: 'var(--color-orange-soft)',

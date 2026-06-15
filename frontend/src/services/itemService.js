@@ -22,11 +22,11 @@ export async function getItemById(itemId) {
  * Create a new listing. seller_id injected from localStorage.
  */
 export async function createItem(itemData) {
-  const sellerId = localStorage.getItem("user_id");
+  
 
   try {
     const response = await API.post(
-      `/items/?seller_id=${sellerId}`,
+      `/items/`,
       itemData
     );
 

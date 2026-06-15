@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
-
+from auth import get_current_user
+from envelope import success
 import schemas
 import services
 from db import get_db
@@ -20,25 +21,11 @@ router = APIRouter(
 )
 def create_item(
     payload: schemas.ItemCreate,
-    seller_id: int = Query(..., description="ID of the seller"),
+    seller_id: str = Query(..., description="ID of the seller"),
     db: Session = Depends(get_db)
 ):
     return services.create_item(db, seller_id, payload)
 
-
-@router.get(
-    "/",
-    response_model=list[schemas.ItemResponse],
-    summary="Get all available items"
-)
-def get_items(
-    channel: Optional[schemas.ListingChannel] = Query(
-        default=None,
-        description="Filter by channel: marketplace or thrift_store"
-    ),
-    db: Session = Depends(get_db)
-):
-    return services.get_items(db, channel)
 
 
 @router.get(
@@ -47,7 +34,23 @@ def get_items(
     summary="Get a single item by ID"
 )
 def get_item(
-    item_id: int,
+    item_id: str,
     db: Session = Depends(get_db)
 ):
     return services.get_item_by_id(db, item_id)
+
+@router.get("/")
+def get_items(
+    channel: Optional[str] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None),
+    search: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, alias="pageSize"),
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user)
+):
+    # Normalize channel value from frontend
+    if channel:
+        channel = channel.lower().replace(" ", "_")
+    return success(services.get_items(db, channel))

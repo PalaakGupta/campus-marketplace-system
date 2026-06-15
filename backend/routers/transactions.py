@@ -50,7 +50,7 @@ def confirm_delivery(
     summary="Get all holding records for a user"
 )
 def get_holding_records(
-    user_id: int,
+    user_id: str,
     db: Session = Depends(get_db)
 ):
     return services.get_holding_records(db, user_id)
