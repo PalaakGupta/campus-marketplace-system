@@ -16,6 +16,7 @@ import Messages from './pages/Messages/Messages';
 import Conversation from './pages/Conversation/Conversation';
 import Notifications from './pages/Notifications/Notifications';
 import Profile from './pages/Profile/Profile';
+import AdminApp from './admin/AdminApp';
 
 import './styles/globals.css';
 import './styles/components.css';
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
+          <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
