@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiArrowRight, FiCamera, FiX,
-  FiUpload, FiZap, FiCheckCircle,
+  FiZap, FiCheckCircle,
 } from 'react-icons/fi';
 import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
 import CategoryChips from '../../components/ui/CategoryChips/CategoryChips';

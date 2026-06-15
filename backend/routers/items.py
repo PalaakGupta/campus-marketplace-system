@@ -54,3 +54,14 @@ def get_items(
     if channel:
         channel = channel.lower().replace(" ", "_")
     return success(services.get_items(db, channel))
+
+
+@router.post("/{item_id}/images")
+async def upload_images(
+    item_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    # Return success without doing anything for now
+    # Images will be added in Phase 2
+    return success({"message": "Images received", "item_id": item_id})

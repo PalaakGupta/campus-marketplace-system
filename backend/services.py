@@ -162,7 +162,7 @@ def topup_wallet(
 
 def create_item(
     db: Session,
-    seller_id: int,
+    seller_id: str,
     payload: schemas.ItemCreate
 ) -> models.Item:
     """
@@ -170,14 +170,18 @@ def create_item(
     """
     get_user_by_id(db, seller_id)  # Raises 404 if seller does not exist
 
+    condition = payload.condition or payload.condition_grade
+
     item = models.Item(
         seller_id       = seller_id,
         title           = payload.title,
         description     = payload.description,
         price           = Decimal(str(payload.price)),
         listing_channel = payload.listing_channel,
-        category        = payload.category
-    )
+        category        = payload.category,
+        condition_grade = condition
+)  
+
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -916,7 +920,7 @@ def get_my_listings(db: Session, current_user: models.User,
             "id"           : item.id,
             "title"        : item.title,
             "price"        : float(item.price),
-            "condition"    : item.condition_grade,
+            "condition": item.condition_grade.value if item.condition_grade else None,
             "status"       : item.status,
             "channel"      : item.listing_channel,
             "image_url"    : None,

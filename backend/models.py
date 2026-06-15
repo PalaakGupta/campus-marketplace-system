@@ -140,7 +140,10 @@ class Item(Base):
     listing_channel = Column(Enum(ListingChannel), nullable=False,
                              default=ListingChannel.marketplace)
     category        = Column(String(100), nullable=True)
-    condition_grade = Column(Enum(ItemCondition), nullable=True)
+    condition_grade = Column(
+    Enum('New', 'Like New', 'Good', 'Fair', 'Poor', name='itemcondition'),
+    nullable=True
+)
     view_count      = Column(Integer, nullable=False, default=0)
     created_at      = Column(DateTime, server_default=func.now(),
                              nullable=False)

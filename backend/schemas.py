@@ -117,7 +117,8 @@ class ItemBase(BaseModel):
                      )
     listing_channel: ListingChannel = Field(default=ListingChannel.marketplace)
     category:        Optional[str]  = Field(None, max_length=100)
-
+    condition:       Optional[str]         = Field(None)  
+    condition_grade: Optional[str]         = Field(None)
 
 class ItemCreate(ItemBase):
     pass
