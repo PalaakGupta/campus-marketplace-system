@@ -293,7 +293,7 @@ export default function ItemDetail() {
           </div>
           <button
             className="btn btn-secondary btn-inline btn-sm"
-            onClick={() => navigate(`/messages`)}
+            onClick={() => navigate(`/messages/${item.id}`)}
             type="button"
           >
             <FiMessageCircle size={13} /> Chat

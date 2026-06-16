@@ -55,7 +55,7 @@ manager = ConnectionManager()
 async def websocket_chat(
     item_id: str,
     websocket: WebSocket,
-    sender_id: str = Query(..., gt=0)
+    sender_id: str = Query(...)
 ):
     """
     Connect to the chat room for a specific item.
@@ -104,7 +104,7 @@ async def websocket_chat(
 )
 def get_chat_history(
     item_id:  str,
-    user_id:  str = Query(..., gt=0),
+    user_id:  str = Query(...),
     db: Session = Depends(get_db)
 ):
     return services.get_chat_history(db, item_id, user_id)

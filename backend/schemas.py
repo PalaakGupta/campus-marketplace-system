@@ -127,6 +127,8 @@ class ItemCreate(ItemBase):
 class ItemResponse(ItemBase):
     id:         str
     seller_id:  str
+    seller_name: Optional[str] = None
+    seller_role: Optional[str] = None
     status:     ItemStatus
     created_at: datetime
     updated_at: datetime
@@ -138,8 +140,8 @@ class ItemResponse(ItemBase):
 # PURCHASE SCHEMAS
 
 class PurchaseRequest(BaseModel):
-    buyer_id: str = Field(..., gt=0)
-    item_id:  str = Field(..., gt=0)
+    buyer_id: str = Field(...)
+    item_id:  str = Field(...)
 
 
 class PurchaseResponse(BaseModel):
@@ -156,8 +158,8 @@ class PurchaseResponse(BaseModel):
 # DELIVERY CONFIRMATION SCHEMAS
 
 class DeliveryConfirmRequest(BaseModel):
-    buyer_id:          str = Field(..., gt=0)
-    holding_record_id: str = Field(..., gt=0)
+    buyer_id:          str = Field(...)
+    holding_record_id: str = Field(...)
 
 
 class DeliveryConfirmResponse(BaseModel):
@@ -203,7 +205,7 @@ class TransactionResponse(BaseModel):
 # CHAT / MESSAGE SCHEMAS
 
 class MessageCreate(BaseModel):
-    sender_id: str  = Field(..., gt=0)
+    sender_id: str  = Field(...)
     content:   str  = Field(..., min_length=1, max_length=2000)
 
 

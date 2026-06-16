@@ -19,12 +19,12 @@ export async function getWalletByUserId(userId) {
 }
 
 /**
- * POST /wallet/{user_id}/sync
+ * POST /wallet/{user_id}/topup
  * Add funds to wallet.
  */
 export async function topUpWallet() {
     const userId = localStorage.getItem("user_id");
-    const response = await API.post(`/wallet/${userId}/sync`);
+    const response = await API.post(`/wallet/${userId}/topup`);
     return response.data.data ?? response.data;
 }
 

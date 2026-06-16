@@ -18,7 +18,14 @@ export default function Messages() {
     const fetchConversations = async () => {
       try {
         setLoading(true);
-       
+        const data = await getConversations();
+        // Support both envelope and plain array responses
+        const conversationsData =
+          data?.data ??
+          data?.conversations ??
+          data ??
+          [];
+          setConversations(conversationsData);
       } catch (err) {
         console.error('Messages fetch error:', err);
       } finally {

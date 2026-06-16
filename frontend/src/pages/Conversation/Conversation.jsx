@@ -50,6 +50,30 @@ export default function Conversation() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const wsRef = useRef(null);
+  
+  useEffect(() => {
+    const ws = createChatWebSocket(id);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      setMessages(prev => [
+        ...prev,
+        {
+          id: msg.message_id,
+          text: msg.content,
+          fromMe:
+            msg.sender_id === localStorage.getItem("user_id"),
+          timestamp: msg.created_at,
+        }
+      ]);
+    };
+    wsRef.current = ws;
+
+    return () => ws.close();
+  }, [id]); 
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
@@ -67,13 +91,14 @@ export default function Conversation() {
 
     try {
       setSending(true);
-      const ws = createChatWebSocket(id);
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ content: text }));
-        ws.close();
-      };
-      // OR use HTTP POST if WebSocket is unavailable:
-      // await API.post(`/chat/${id}/messages`, { content: text });
+      if (
+        wsRef.current &&
+        wsRef.current.readyState === WebSocket.OPEN
+      ) {
+        wsRef.current.send(input);
+      } else {
+        throw new Error("WebSocket not connected");
+      }
       setMessages((prev) =>
         prev.map((m) => m.id === optimistic.id
           ? { ...m, status: 'sent' }
