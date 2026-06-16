@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from jose import jwt
 import os
-
+import bcrypt
 import models
 from admin.admin_models import (
     AdminUser, UserReport, AdminActivityLog,
@@ -23,12 +23,13 @@ TOKEN_MINUTES = 480
 
 #  Auth helpers 
 
-def _hash_pw(plain: str) -> str:
-    return _pwd_ctx.hash(plain)
 
+
+def _hash_pw(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 def _verify_pw(plain: str, hashed: str) -> bool:
-    return _pwd_ctx.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def _make_token(admin_id: str, role: str) -> str:
