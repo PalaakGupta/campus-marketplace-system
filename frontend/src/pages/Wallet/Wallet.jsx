@@ -82,18 +82,20 @@ export default function Wallet() {
     }
   };
 
-  const handleTopUp = async () => {
-    try {
-      setToppingUp(true);
-      await topUpWallet();
-      setTopUpAmount("");
-      setShowTopUp(false);
-      await fetchWallet();
-    } catch (err) {
-      console.error("Top up error:", err);
-    } finally {
-      setToppingUp(false);
-    }
+const handleTopUp = async () => {
+    const parsed = parseFloat(topUpAmount);
+      if (!parsed || parsed <= 0) return;
+      try {
+          setToppingUp(true);
+          await topUpWallet(parsed);          // ← pass the amount
+          setTopUpAmount("");
+          setShowTopUp(false);
+          await fetchWallet();
+      } catch (err) {
+          console.error("Top up error:", err);
+      } finally {
+          setToppingUp(false);
+      }
   };
 
   const formatAmount = (n) =>

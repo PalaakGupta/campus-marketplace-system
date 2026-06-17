@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiShield, FiLock, FiUser, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
+import { FiShield, FiUser, FiEye, FiEyeOff, FiAlertCircle, FiLock } from "react-icons/fi";
 import { adminLogin } from "../services/adminApi";
 import "../admin.css";
 
@@ -53,7 +53,7 @@ export default function AdminLogin() {
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "#1e3c72" }}>
-              Campus Admin
+              Campus Marketplace Admin
             </div>
             <div style={{ fontSize: 12, color: "#6b7280" }}>
               Secure Marketplace Control Panel
@@ -132,15 +132,6 @@ export default function AdminLogin() {
             {loading ? "Signing In…" : "Sign In to Admin Panel"}
           </button>
         </form>
-
-        {/* Security Note */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 6, justifyContent: "center",
-          marginTop: 24, fontSize: 11, color: "#9ca3af",
-        }}>
-          <FiLock size={11} />
-          Secured with JWT · Session expires in 8 hours
-        </div>
       </div>
     </div>
   );

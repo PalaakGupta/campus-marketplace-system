@@ -8,22 +8,22 @@ const NAV = [
   {
     section: "Operations",
     items: [
-      { to: "/admin/dashboard",    icon: FiHome,       label: "Dashboard",     iconColor: "#818cf8" },
-      { to: "/admin/users",        icon: FiUsers,      label: "User Import",   iconColor: "#34d399" },
-      { to: "/admin/listings",     icon: FiPackage,    label: "Listings",      iconColor: "#60a5fa" },
-      { to: "/admin/transactions", icon: FiDollarSign, label: "Transactions",  iconColor: "#fbbf24" },
+      { to: "/admin/dashboard",    icon: FiHome,       label: "Dashboard",     iconColor: "var(--ad-indigo)" },
+      { to: "/admin/users",        icon: FiUsers,      label: "User Import",   iconColor: "var(--ad-green)"  },
+      { to: "/admin/listings",     icon: FiPackage,    label: "Listings",      iconColor: "var(--ad-blue)"   },
+      { to: "/admin/transactions", icon: FiDollarSign, label: "Transactions",  iconColor: "var(--ad-amber)"  },
     ],
   },
   {
     section: "Support",
     items: [
-      { to: "/admin/reports", icon: FiFlag, label: "Reports & Support", iconColor: "#f87171", badge: true },
+      { to: "/admin/reports", icon: FiFlag, label: "Reports & Support", iconColor: "var(--ad-red)", badge: true },
     ],
   },
   {
     section: "System",
     items: [
-      { to: "/admin/activity", icon: FiActivity, label: "Activity Logs", iconColor: "#a78bfa" },
+      { to: "/admin/activity", icon: FiActivity, label: "Activity Logs", iconColor: "var(--ad-purple)" },
     ],
   },
 ];
@@ -39,6 +39,7 @@ export default function AdminSidebar({ open, onClose, unreadReports, admin, init
 
   return (
     <aside className={`ad-sidebar ${open ? "" : "ad-sidebar--hidden"}`}>
+
       {/* Brand */}
       <div className="ad-sidebar__brand">
         <div className="ad-sidebar__brand-icon">
@@ -59,9 +60,7 @@ export default function AdminSidebar({ open, onClose, unreadReports, admin, init
               key={to}
               to={to}
               onClick={onClose}
-              className={({ isActive }) =>
-                `ad-nav-item ${isActive ? "active" : ""}`
-              }
+              className={({ isActive }) => `ad-nav-item ${isActive ? "active" : ""}`}
             >
               <div className="ad-nav-item__icon">
                 <Icon size={17} color={iconColor} />
@@ -83,9 +82,10 @@ export default function AdminSidebar({ open, onClose, unreadReports, admin, init
             <div className="ad-admin-name">{admin?.name || "Admin"}</div>
             <div className="ad-admin-role">Click to sign out</div>
           </div>
-          <FiLogOut size={15} color="rgba(255,255,255,0.4)" />
+          <FiLogOut size={15} color="var(--ad-text-hint)" />
         </div>
       </div>
+
     </aside>
   );
 }

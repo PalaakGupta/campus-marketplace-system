@@ -481,7 +481,7 @@ def admin_issue_refund(db: Session, holding_id: str,
 
     _log(db, admin.id, AdminActivityType.refund_issued,
          target_id=holding_id, target_type="holding",
-         note=f"Refund ₵{h.amount} to buyer {h.buyer_id}. Reason: {reason}")
+         note=f"Refund ₹{h.amount} to buyer {h.buyer_id}. Reason: {reason}")
 
     return {
         "holding_id":      holding_id,
