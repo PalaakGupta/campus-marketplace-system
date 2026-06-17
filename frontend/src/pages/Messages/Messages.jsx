@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { getConversations } from '../../services/chatService';
 import { useNavigate } from 'react-router-dom';
-import { FiMessageCircle, FiSearch } from 'react-icons/fi';
+
+import { FiMessageCircle } from 'react-icons/fi';
 import PageHeader from '../../components/layout/PageHeader/PageHeader';
 import SearchBar from '../../components/ui/SearchBar/SearchBar';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';

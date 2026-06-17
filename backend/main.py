@@ -9,6 +9,8 @@ from routers import (
     my_listings, my_purchases, notifications,
     profile
 )
+from fastapi.staticfiles import StaticFiles
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -18,7 +20,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ── CORS ──────────────────────────────────────────────────────
+#  CORS 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -31,8 +33,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# ─────────────────────────────────────────────────────────────
+
 admin_models.Base.metadata.create_all(bind=engine)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(users.router)
 app.include_router(wallet_summary.router)
 app.include_router(wallet.router)

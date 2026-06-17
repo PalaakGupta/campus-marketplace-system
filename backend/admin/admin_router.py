@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Optional
 from db import get_db
@@ -7,11 +7,13 @@ from admin.admin_auth import get_admin_user
 from admin.admin_models import AdminUser
 import admin.admin_schemas as aschemas
 import admin.admin_service as aservice
+import models
+import csv, io
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
-#  Auth 
+# ── Auth ──────────────────────────────────────────────────────
 
 @router.post("/login")
 def admin_login(
@@ -21,17 +23,17 @@ def admin_login(
     return success(aservice.admin_login(db, payload))
 
 
-# ─ Dashboard 
+# ── Dashboard ─────────────────────────────────────────────────
 
 @router.get("/dashboard")
 def admin_dashboard(
-    db: Session     = Depends(get_db),
+    db: Session      = Depends(get_db),
     admin: AdminUser = Depends(get_admin_user)
 ):
     return success(aservice.get_admin_dashboard(db))
 
 
-#  Users 
+# ── Users ─────────────────────────────────────────────────────
 
 @router.get("/users")
 def list_users(
@@ -48,11 +50,116 @@ def list_users(
     ))
 
 
+# ── User Import (MUST be before /{user_id} routes) ───────────
+
+@router.post("/users/import/preview")
+async def preview_user_import(
+    file: UploadFile = File(...),
+    admin: AdminUser = Depends(get_admin_user)
+):
+    content = await file.read()
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        text = content.decode("latin-1")
+
+    reader = csv.DictReader(io.StringIO(text))
+    rows   = []
+    valid  = 0
+    invalid = 0
+
+    for i, row in enumerate(reader, 1):
+        is_valid = all(
+            str(row.get(c, "")).strip()
+            for c in ["name", "login_id", "email"]
+        )
+        if is_valid:
+            valid += 1
+        else:
+            invalid += 1
+        rows.append({
+            "row_number": i,
+            "name":       row.get("name", "").strip(),
+            "login_id":   row.get("login_id", "").strip(),
+            "email":      row.get("email", "").strip(),
+            "department": row.get("department", "").strip(),
+            "is_valid":   is_valid,
+            "error":      None if is_valid else "Missing required fields (name, login_id, email)"
+        })
+
+    return success({
+        "total_rows":     len(rows),
+        "valid_count":    valid,
+        "invalid_count":  invalid,
+        "duplicate_count": 0,
+        "valid_records":  [r for r in rows if r["is_valid"]],
+        "rows":           rows
+    })
+
+
+@router.post("/users/import/confirm")
+def confirm_user_import(
+    payload: dict,
+    db: Session      = Depends(get_db),
+    admin: AdminUser = Depends(get_admin_user)
+):
+    from auth import hash_password
+    from decimal import Decimal
+
+    records  = payload.get("records", [])
+    imported = 0
+    skipped  = 0
+
+    for r in records:
+        exists = db.query(models.User).filter(
+            models.User.login_id == r.get("login_id")
+        ).first()
+        if exists:
+            skipped += 1
+            continue
+
+        user = models.User(
+            login_id      = r["login_id"],
+            name          = r["name"],
+            email         = r["email"],
+            password_hash = hash_password("12345678"),
+            role          = "student"
+        )
+        db.add(user)
+        db.flush()
+
+        wallet = models.Wallet(
+            user_id = user.id,
+            balance = Decimal("0.00")
+        )
+        db.add(wallet)
+        imported += 1
+
+    db.commit()
+    return success({
+        "imported": imported,
+        "skipped":  skipped,
+        "message":  f"{imported} user(s) imported, {skipped} skipped (duplicates)."
+    })
+
+
+@router.get("/users/import/history")
+def import_history(
+    page:      int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=50, alias="pageSize"),
+    admin: AdminUser = Depends(get_admin_user)
+):
+    # Placeholder — extend with a DB table later
+    return success({"history": [], "total": 0, "page": page, "page_size": page_size})
+
+
+# ── User Detail & Status (AFTER import routes) ────────────────
+
 @router.get("/users/{user_id}")
 def get_user_detail(
     user_id: str,
-    db:      Session    = Depends(get_db),
-    admin:   AdminUser  = Depends(get_admin_user)
+    db:      Session     = Depends(get_db),
+    admin:   AdminUser   = Depends(get_admin_user)
 ):
     return success(aservice.admin_get_user_detail(db, user_id))
 
@@ -61,15 +168,15 @@ def get_user_detail(
 def toggle_user_status(
     user_id: str,
     payload: aschemas.AdminUserStatusUpdate,
-    db:      Session    = Depends(get_db),
-    admin:   AdminUser  = Depends(get_admin_user)
+    db:      Session     = Depends(get_db),
+    admin:   AdminUser   = Depends(get_admin_user)
 ):
     return success(aservice.admin_toggle_user_status(
         db, user_id, payload.is_active, admin
     ))
 
 
-#  Items 
+# ── Items ─────────────────────────────────────────────────────
 
 @router.get("/items")
 def list_items(
@@ -88,8 +195,8 @@ def list_items(
 @router.get("/items/{item_id}")
 def get_item_detail(
     item_id: str,
-    db:      Session    = Depends(get_db),
-    admin:   AdminUser  = Depends(get_admin_user)
+    db:      Session     = Depends(get_db),
+    admin:   AdminUser   = Depends(get_admin_user)
 ):
     return success(aservice.admin_get_item_detail(db, item_id))
 
@@ -97,13 +204,36 @@ def get_item_detail(
 @router.delete("/items/{item_id}")
 def delete_item(
     item_id: str,
-    db:      Session    = Depends(get_db),
-    admin:   AdminUser  = Depends(get_admin_user)
+    db:      Session     = Depends(get_db),
+    admin:   AdminUser   = Depends(get_admin_user)
 ):
     return success(aservice.admin_delete_item(db, item_id, admin))
 
 
-#  Purchases / Holdings 
+@router.patch("/items/{item_id}/restore")
+def restore_item(
+    item_id: str,
+    db:      Session     = Depends(get_db),
+    admin:   AdminUser   = Depends(get_admin_user)
+):
+    item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    if not item:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Item not found.")
+    item.status = models.ItemStatus.available
+    db.commit()
+    return success({"item_id": item_id, "message": "Listing restored to available."})
+
+
+@router.patch("/items/{item_id}/flag")
+def flag_item(
+    item_id: str,
+    admin:   AdminUser = Depends(get_admin_user)
+):
+    return success({"item_id": item_id, "message": "Flag feature not yet implemented."})
+
+
+# ── Purchases / Holdings ──────────────────────────────────────
 
 @router.get("/purchases")
 def list_purchases(
@@ -156,7 +286,7 @@ def issue_refund(
     ))
 
 
-#  Notifications 
+# ── Notifications ─────────────────────────────────────────────
 
 @router.post("/notifications")
 def send_notification(
@@ -169,15 +299,15 @@ def send_notification(
 
 @router.get("/notifications")
 def get_notifications(
-    page:      int     = Query(default=1,  ge=1),
-    page_size: int     = Query(default=20, ge=1, le=100, alias="pageSize"),
-    db:        Session = Depends(get_db),
+    page:      int       = Query(default=1,  ge=1),
+    page_size: int       = Query(default=20, ge=1, le=100, alias="pageSize"),
+    db:        Session   = Depends(get_db),
     admin:     AdminUser = Depends(get_admin_user)
 ):
     return success(aservice.admin_get_notifications(db, page, page_size))
 
 
-#  Reports 
+# ── Reports ───────────────────────────────────────────────────
 
 @router.get("/reports")
 def list_reports(
@@ -205,13 +335,36 @@ def resolve_report(
     ))
 
 
-#  Activity Logs 
+# ── Support Requests ──────────────────────────────────────────
+
+@router.get("/support-requests")
+def list_support_requests(
+    page:      int           = Query(default=1,  ge=1),
+    page_size: int           = Query(default=20, ge=1, le=100, alias="pageSize"),
+    status:    Optional[str] = Query(default=None),
+    admin:     AdminUser     = Depends(get_admin_user)
+):
+    return success({"requests": [], "total": 0,
+                    "message": "Support requests not yet implemented."})
+
+
+@router.patch("/support-requests/{req_id}/respond")
+def respond_support(
+    req_id:  str,
+    payload: dict,
+    admin:   AdminUser = Depends(get_admin_user)
+):
+    return success({"req_id": req_id,
+                    "message": "Support response not yet implemented."})
+
+
+# ── Activity Logs ─────────────────────────────────────────────
 
 @router.get("/activity-logs")
 def get_activity_logs(
-    page:      int     = Query(default=1,  ge=1),
-    page_size: int     = Query(default=20, ge=1, le=100, alias="pageSize"),
-    db:        Session = Depends(get_db),
+    page:      int       = Query(default=1,  ge=1),
+    page_size: int       = Query(default=20, ge=1, le=100, alias="pageSize"),
+    db:        Session   = Depends(get_db),
     admin:     AdminUser = Depends(get_admin_user)
 ):
     return success(aservice.admin_get_activity_logs(db, page, page_size))

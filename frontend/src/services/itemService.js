@@ -22,14 +22,12 @@ export async function getItemById(itemId) {
  * Create a new listing. seller_id injected from localStorage.
  */
 export async function createItem(itemData) {
-  
+  const sellerId = localStorage.getItem("user_id"); 
 
   try {
-    const response = await API.post(
-      `/items/`,
-      itemData
-    );
-
+    const response = await API.post(`/items/`, itemData, {
+      params: { seller_id: sellerId }  
+    });
     return response.data;
   } catch (err) {
     console.log("FASTAPI ERROR =", err.response?.data);

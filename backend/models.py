@@ -149,7 +149,7 @@ class Item(Base):
                              nullable=False)
     updated_at      = Column(DateTime, server_default=func.now(),
                              onupdate=func.now(), nullable=False)
-
+    image_url = Column(String(500), nullable=True)
     seller         = relationship("User", back_populates="items")
     holding_record = relationship("HoldingRecord",
                                   back_populates="item", uselist=False)

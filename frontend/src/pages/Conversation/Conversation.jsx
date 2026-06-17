@@ -2,10 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiMoreVertical, FiSend,
-  FiPaperclip, FiShield, FiAlertCircle,
+  FiPaperclip, FiShield,
 } from 'react-icons/fi';
 
-import PageHeader from '../../components/layout/PageHeader/PageHeader';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import { getChatHistory, createChatWebSocket } from '../../services/chatService';
@@ -15,6 +14,7 @@ export default function Conversation() {
   const { conversationId: id } = useParams();
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
+  const wsRef = useRef(null);
 
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -22,6 +22,7 @@ export default function Conversation() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
+  // Fetch chat history
   useEffect(() => {
     const fetchConversation = async () => {
       try {
@@ -46,44 +47,46 @@ export default function Conversation() {
     fetchConversation();
   }, [id]);
 
+  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const wsRef = useRef(null);
-  
+  // WebSocket connection
   useEffect(() => {
     const ws = createChatWebSocket(id);
 
+    ws.onopen  = () => console.log("WS Connected!");
+    ws.onerror = (e) => console.log("WS Error:", e);
+    ws.onclose = (e) => console.log("WS Closed:", e.code, e.reason);
+
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-
       setMessages(prev => [
         ...prev,
         {
-          id: msg.message_id,
-          text: msg.content,
-          fromMe:
-            msg.sender_id === localStorage.getItem("user_id"),
+          id:        msg.message_id,
+          text:      msg.content,
+          fromMe:    msg.sender_id === localStorage.getItem("user_id"),
           timestamp: msg.created_at,
         }
       ]);
     };
-    wsRef.current = ws;
 
+    wsRef.current = ws;
     return () => ws.close();
-  }, [id]); 
+  }, [id]);
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
 
     const optimistic = {
-      id: `temp-${Date.now()}`,
+      id:        `temp-${Date.now()}`,
       text,
-      fromMe: true,
+      fromMe:    true,
       timestamp: new Date().toISOString(),
-      status: 'sending',
+      status:    'sending',
     };
 
     setMessages((prev) => [...prev, optimistic]);
@@ -91,21 +94,14 @@ export default function Conversation() {
 
     try {
       setSending(true);
-      if (
-        wsRef.current &&
-        wsRef.current.readyState === WebSocket.OPEN
-      ) {
-        wsRef.current.send(input);
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(text);
+        setMessages((prev) =>
+          prev.map((m) => m.id === optimistic.id ? { ...m, status: 'sent' } : m)
+        );
       } else {
         throw new Error("WebSocket not connected");
       }
-      setMessages((prev) =>
-        prev.map((m) => m.id === optimistic.id
-          ? { ...m, status: 'sent' }
-          : m
-        )
-      );
-
     } catch (err) {
       setMessages((prev) =>
         prev.map((m) => m.id === optimistic.id ? { ...m, status: 'failed' } : m)
@@ -127,7 +123,8 @@ export default function Conversation() {
     return (
       <div className="conversation page">
         <div className="conversation__header">
-          <button className="btn-ghost btn-icon" onClick={() => navigate('/messages')} type="button">
+          <button className="btn-ghost btn-icon"
+            onClick={() => navigate('/messages')} type="button">
             <FiArrowLeft size={20} />
           </button>
         </div>
@@ -140,6 +137,7 @@ export default function Conversation() {
 
   return (
     <div className="conversation page">
+
       {/* ── Header ── */}
       <div className="conversation__header">
         <button
@@ -177,7 +175,9 @@ export default function Conversation() {
         >
           <div className="conversation__listing-image-wrap">
             {conversation.listing.imageUrl
-              ? <img src={conversation.listing.imageUrl} alt={conversation.listing.title} className="conversation__listing-image" />
+              ? <img src={conversation.listing.imageUrl}
+                  alt={conversation.listing.title}
+                  className="conversation__listing-image" />
               : <div className="conversation__listing-image-placeholder" />
             }
           </div>
@@ -208,11 +208,16 @@ export default function Conversation() {
             key={msg.id}
             className={`conversation__bubble-wrap ${msg.fromMe ? 'conversation__bubble-wrap--me' : ''}`}
           >
-            <div className={`conversation__bubble ${msg.fromMe ? 'conversation__bubble--me' : 'conversation__bubble--them'} ${msg.status === 'failed' ? 'conversation__bubble--failed' : ''}`}>
+            <div className={`conversation__bubble
+              ${msg.fromMe ? 'conversation__bubble--me' : 'conversation__bubble--them'}
+              ${msg.status === 'failed' ? 'conversation__bubble--failed' : ''}`}
+            >
               <p className="conversation__bubble-text">{msg.text}</p>
               <div className="conversation__bubble-meta">
                 <span className="conversation__bubble-time">
-                  {msg.status === 'sending' ? 'Sending...' : msg.status === 'failed' ? 'Failed' : formatTime(msg.timestamp)}
+                  {msg.status === 'sending' ? 'Sending...'
+                    : msg.status === 'failed' ? 'Failed'
+                    : formatTime(msg.timestamp)}
                 </span>
               </div>
             </div>
@@ -224,7 +229,8 @@ export default function Conversation() {
 
       {/* ── Input ── */}
       <div className="conversation__input-bar">
-        <button className="btn-icon conversation__attach-btn" type="button" aria-label="Attach file">
+        <button className="btn-icon conversation__attach-btn"
+          type="button" aria-label="Attach file">
           <FiPaperclip size={18} />
         </button>
         <div className="conversation__input-wrap">
@@ -246,6 +252,7 @@ export default function Conversation() {
           <FiSend size={16} />
         </button>
       </div>
+
     </div>
   );
 }

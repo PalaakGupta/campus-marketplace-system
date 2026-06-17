@@ -193,23 +193,37 @@ def create_item(
     return item
 
 
-def get_items(
-    db: Session,
-    channel: schemas.ListingChannel = None
-) -> list[models.Item]:
-    """
-    Return all available items.
-    Optionally filter by listing channel.
-    """
+def get_items(db, channel=None, category=None, search=None):
     query = db.query(models.Item).filter(
         models.Item.status == models.ItemStatus.available
     )
-
     if channel:
         query = query.filter(models.Item.listing_channel == channel)
+    if category and category.lower() != "all":
+        query = query.filter(models.Item.category == category)
+    if search:
+        query = query.filter(models.Item.title.ilike(f"%{search}%"))
 
-    return query.all()
-
+    items = query.all()
+    result = []
+    for item in items:
+        seller = get_user_by_id(db, item.seller_id)
+        result.append({
+            "id"             : item.id,
+            "title"          : item.title,
+            "price"          : float(item.price),
+            "condition"      : item.condition_grade,
+            "category"       : item.category,
+            "listing_channel": item.listing_channel,
+            "status"         : item.status,
+            "image_url"      : None,
+            "seller_id"      : item.seller_id,
+            "seller_name"    : seller.name,
+            "seller_role"    : seller.role,
+            "view_count"     : item.view_count,
+            "created_at"     : item.created_at.isoformat()
+        })
+    return result
 
 def get_item_by_id(db: Session, item_id: str) -> models.Item:
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
@@ -437,9 +451,8 @@ def get_holding_records(
         (models.HoldingRecord.seller_id == user_id)
     ).all()
 
-# ================================================================
+
 # CHAT SERVICES
-# ================================================================
 
 def validate_chat_participant(
     db: Session,
@@ -939,7 +952,11 @@ def get_my_listings(db: Session, current_user: models.User,
         },
         "listings": listings
     }
-
+def increment_view(db, item_id):
+    item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    if item:
+        item.view_count += 1
+        db.commit()
 
 def update_item_status(db: Session, item_id: str,
                        new_status: str,

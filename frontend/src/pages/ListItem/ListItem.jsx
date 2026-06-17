@@ -137,13 +137,13 @@ export default function ListItem() {
             : "marketplace",
       });
 
-      const listingId = listingData.id || listingData.data?.id;
+      const listingId = listingData?.data?.id || listingData?.id;
 
       // Step 2: Upload images if any
       if (form.images.length > 0 && listingId) {
         try {
           const formData = new FormData();
-          form.images.forEach((img) => formData.append("images[]", img.file));
+          form.images.forEach((img) => formData.append("images", img.file));
           await API.post(`/items/${listingId}/images`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
