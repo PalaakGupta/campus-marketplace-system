@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiHeart, FiShield, FiMessageCircle,
-  FiTag, FiEye, FiClock, FiAlertCircle, FiAlertTriangle,
-  FiCheckCircle, FiLock,
+  FiTag, FiEye, FiAlertCircle, FiAlertTriangle,
+   FiLock,
 } from 'react-icons/fi';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
@@ -121,9 +121,13 @@ export default function ItemDetail() {
           getWalletSummary().catch(() => null),
         ]);
         // Normalize field names
-        const normalized = {
-          ...itemData,
-          imageUrl: itemData.image_url || itemData.imageUrl,
+        const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+const normalized = {
+  ...itemData,
+  imageUrl: itemData.image_url 
+    ? `${BASE}${itemData.image_url}` 
+    : itemData.imageUrl || null,
           sellerName: itemData.seller?.name || itemData.seller_name,
           sellerRole: itemData.seller?.role || itemData.seller_role,
           sellerVerified: itemData.seller?.is_verified ?? itemData.seller_verified ?? false,
