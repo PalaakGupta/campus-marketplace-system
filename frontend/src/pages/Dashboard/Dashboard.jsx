@@ -8,20 +8,16 @@ import LoadingState from '../../components/ui/LoadingState/LoadingState';
 import EmptyState from '../../components/ui/EmptyState/EmptyState';
 import { FiBell, FiPackage, FiHeart, FiMessageCircle, FiShield, FiChevronRight, FiClock, FiAlertCircle, FiPlus, FiCheckCircle, FiTrendingUp, FiShoppingBag } from 'react-icons/fi';
 
-import { confirmDelivery } from '../../services/purchaseService';
 import API from '../../services/api';
 import './Dashboard.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // States
   const [dashboardData, setDashboardData] = useState(null);
   const [savedItems, setSavedItems] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(null);
-
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -41,19 +37,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
-
-  const handleConfirmDelivery = async (purchaseId) => {
-    try {
-      setConfirming(true);
-      await confirmDelivery(purchaseId);
-      // Refresh dashboard to reflect new balance and cleared hold
-      await fetchDashboard();
-    } catch (err) {
-      console.error("Confirm delivery failed:", err);
-    } finally {
-      setConfirming(false);
-    }
-  };
 
   const handleSaveItem = (itemId) => {
     setSavedItems((prev) => {
@@ -79,15 +62,15 @@ export default function Dashboard() {
     );
   }
 
-  const { user, wallet, stats, active_purchase, recent_listings } = dashboardData || {};
-  const activePurchase = active_purchase
+  const { user, wallet, stats, activePurchase: rawActivePurchase, recent_listings } = dashboardData || {};
+  const activePurchase = rawActivePurchase
     ? {
-        ...active_purchase,
-        imageUrl: active_purchase.image_url,
-        sellerName: active_purchase.seller_name,
-        sellerRole: active_purchase.seller_role,
-        paymentStatus: active_purchase.payment_status,
-        id: active_purchase.purchase_id,
+        ...rawActivePurchase,
+        imageUrl: rawActivePurchase.image_url,
+        sellerName: rawActivePurchase.seller_name,
+        sellerRole: rawActivePurchase.seller_role,
+        paymentStatus: rawActivePurchase.payment_status,
+        id: rawActivePurchase.purchase_id,
       }
     : null;
 
@@ -103,6 +86,12 @@ export default function Dashboard() {
             <div>
               <p className="dashboard__greeting-label">Hello,</p>
               <p className="dashboard__greeting-name">{user?.name ?? "—"}</p>
+              {user?.role && (
+                <p className="dashboard__greeting-role">{user.role}</p>
+              )}
+              {user?.login_id && (
+                <p className="dashboard__greeting-id">ID: {user.login_id}</p>
+              )}
             </div>
           </div>
           <div className="dashboard__header-actions">
@@ -118,12 +107,6 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <BalanceCard
-          availableBalance={wallet?.available_balance}
-          heldBalance={wallet?.held_balance}
-          onTopUp={() => navigate("/wallet")}
-          onHistory={() => navigate("/wallet")}
-        />
       </div>
 
       <div className="dashboard__body">
@@ -147,13 +130,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── Security Notice ── */}
-        <SecurityCard
-          title="Secure Campus Marketplace"
-          message="Buyer payments are protected in a secure vault until you confirm item delivery."
-          variant="info"
-        />
-
         {/* ── Active Purchase ── */}
         <div className="dashboard__section">
           <div className="section-header">
@@ -166,7 +142,11 @@ export default function Dashboard() {
           {loading ? (
             <LoadingState type="list" count={1} />
           ) : activePurchase ? (
-            <div className="dashboard__purchase-card card">
+            <div
+              className="dashboard__purchase-card card"
+              onClick={() => navigate('/purchases')}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="dashboard__purchase-body">
                 <div className="dashboard__purchase-image-wrap">
                   {activePurchase.imageUrl
@@ -187,22 +167,12 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              {activePurchase.paymentStatus === 'holding' && (
-                <div className="dashboard__purchase-action">
-                  <FiClock size={14} />
-                  <span className="dashboard__purchase-action-text">
-                    Have you received this item?
-                  </span>
-                  <button
-                    className="btn btn-sm btn-inline"
-                    style={{ background: 'var(--color-green)', color: '#fff', border: 'none' }}
-                    onClick={() => handleConfirmDelivery(activePurchase.id)}
-                    type="button"
-                  >
-                    {confirming ? "Confirming..." : "Confirm"}
-                  </button>
-                </div>
-              )}
+
+              {/* Info-only notice — confirmation happens on the Purchases page */}
+              <div className="dashboard__purchase-waiting-bar">
+                <FiClock size={14} />
+                <span>Awaiting your confirmation — go to My Purchases to confirm receipt</span>
+              </div>
             </div>
           ) : (
             <EmptyState
@@ -252,31 +222,6 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* ── My Activity Summary ── */}
-        <div className="dashboard__section">
-          <div className="section-header">
-            <span className="section-title">My Activity</span>
-          </div>
-          <div className="dashboard__activity-grid card">
-            {[
-              { icon: FiPackage, label: 'Active Listings', value: stats?.active_listings ?? 0, to: '/my-listings', color: 'var(--color-blue)' },
-              { icon: FiTrendingUp, label: 'Completed Sales', value: stats?.completed_sales ?? 0, to: '/my-listings', color: 'var(--color-green-text)' },
-              { icon: FiCheckCircle, label: 'Purchases', value: stats?.total_purchases ?? 0, to: '/purchases', color: 'var(--color-orange-text)' },
-            ].map((a) => (
-              <button
-                key={a.label}
-                className="dashboard__activity-item"
-                onClick={() => navigate(a.to)}
-                type="button"
-              >
-                <a.icon size={18} color={a.color} />
-                <span className="dashboard__activity-value">{a.value}</span>
-                <span className="dashboard__activity-label">{a.label}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

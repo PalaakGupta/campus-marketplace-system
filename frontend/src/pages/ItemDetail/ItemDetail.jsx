@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft, FiHeart, FiShield, FiMessageCircle,
@@ -111,6 +111,8 @@ export default function ItemDetail() {
 
   const currentUserId = localStorage.getItem("user_id");
 
+  const hasIncrementedView = useRef(false);
+
   useEffect(() => {
     const fetchAll = async () => {
       try {
@@ -120,14 +122,13 @@ export default function ItemDetail() {
           getItemById(id),
           getWalletSummary().catch(() => null),
         ]);
-        // Normalize field names
         const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-const normalized = {
-  ...itemData,
-  imageUrl: itemData.image_url 
-    ? `${BASE}${itemData.image_url}` 
-    : itemData.imageUrl || null,
+        const normalized = {
+          ...itemData,
+          imageUrl: itemData.image_url
+            ? `${BASE}${itemData.image_url}`
+            : itemData.imageUrl || null,
           sellerName: itemData.seller?.name || itemData.seller_name,
           sellerRole: itemData.seller?.role || itemData.seller_role,
           sellerVerified: itemData.seller?.is_verified ?? itemData.seller_verified ?? false,
@@ -139,7 +140,18 @@ const normalized = {
         setIsSaved(itemData.is_saved ?? false);
         setUserBalance(walletData?.available_balance ?? null);
 
-        incrementView(id).catch(() => { });
+        if (!hasIncrementedView.current) {
+          hasIncrementedView.current = true;
+          incrementView(id)
+            .then(() => {
+              setItem((prev) =>
+                prev ? { ...prev, viewCount: (prev.viewCount ?? 0) + 1 } : prev
+              );
+            })
+            .catch(() => {
+              hasIncrementedView.current = false; // allow retry if it actually failed
+            });
+        }
       } catch (err) {
         setError(err?.response?.data?.error?.message || "Failed to load item");
       } finally {

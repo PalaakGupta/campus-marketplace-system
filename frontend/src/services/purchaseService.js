@@ -14,11 +14,15 @@ export async function purchaseItem(itemId) {
 }
 
 /**
- * POST /delivery/confirm/{purchase_id}
+ * POST /transactions/confirm-delivery
  * Buyer confirms delivery — releases funds to seller.
  */
-export async function confirmDelivery(purchaseId) {
-    const response = await API.post(`/delivery/confirm/${purchaseId}`);
+export async function confirmDelivery(holdingRecordId) {
+    const buyerId = localStorage.getItem("user_id");
+    const response = await API.post("/transactions/confirm-delivery", {
+        holding_record_id: holdingRecordId,
+        buyer_id: buyerId,
+    });
     return response.data.data ?? response.data;
 }
 

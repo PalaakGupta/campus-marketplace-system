@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FiArrowLeft, FiArrowRight, FiCamera, FiX,
   FiZap, FiCheckCircle,
 } from 'react-icons/fi';
 import SecurityCard from '../../components/ui/SecurityCard/SecurityCard';
 import CategoryChips from '../../components/ui/CategoryChips/CategoryChips';
-import { createItem } from '../../services/itemService';
+import { createItem, updateItem, getItemById } from '../../services/itemService';
 import API from '../../services/api';
 import './ListItem.css';
 
@@ -50,9 +50,11 @@ const INITIAL_ERRORS = {
   images: '',
 };
 
-function validate(step, form) {
+function validate(step, form, isEditMode) {
   const errors = { ...INITIAL_ERRORS };
-  if (step === 1 && form.images.length === 0) {
+  // In edit mode, existing listings may already have a server-side image
+  // and no freshly-picked local file — don't block step 1 on that.
+  if (step === 1 && form.images.length === 0 && !isEditMode) {
     errors.images = 'Please add at least one photo.';
   }
   if (step === 2) {
@@ -74,12 +76,52 @@ function hasErrors(errors) {
 export default function ListItem() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditMode = Boolean(editId);
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState(INITIAL_ERRORS);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
+
+  // ── Load existing listing data when in edit mode ──
+  useEffect(() => {
+    if (!editId) return;
+
+    let cancelled = false;
+    const loadExisting = async () => {
+      try {
+        setLoadingExisting(true);
+        const item = await getItemById(editId);
+
+        if (cancelled) return;
+
+        setForm({
+          title: item.title ?? '',
+          category: item.category ?? '',
+          condition: item.condition ?? item.condition_grade ?? '',
+          channel: item.listing_channel === 'thrift_store' ? 'thrift Store' : 'marketplace',
+          description: item.description ?? '',
+          price: item.price != null ? String(item.price) : '',
+          // Existing server-side image shown as a non-removable-from-disk preview;
+          // user can still add more local images on top of it.
+          images: item.image_url
+            ? [{ id: 'existing-cover', url: item.image_url, file: null, existing: true }]
+            : [],
+        });
+      } catch (err) {
+        setSubmitError('Could not load this listing for editing.');
+      } finally {
+        if (!cancelled) setLoadingExisting(false);
+      }
+    };
+
+    loadExisting();
+    return () => { cancelled = true; };
+  }, [editId]);
 
   const pct = Math.round((step / TOTAL_STEPS) * 100);
 
@@ -107,7 +149,7 @@ export default function ListItem() {
   };
 
   const handleNext = () => {
-    const validationErrors = validate(step, form);
+    const validationErrors = validate(step, form, isEditMode);
     if (hasErrors(validationErrors)) {
       setErrors(validationErrors);
       return;
@@ -125,30 +167,39 @@ export default function ListItem() {
       setSubmitting(true);
       setSubmitError("");
 
-      const listingData = await createItem({
+      const payload = {
         title:           form.title.trim(),
         description:     form.description.trim(),
         price:           parseInt(form.price, 10),
         category:        form.category,
         condition:       form.condition,
         listing_channel:
-          form.channel === "Thrift Store"
+          form.channel === "thrift Store"
             ? "thrift_store"
             : "marketplace",
-      });
+      };
 
-      const listingId = listingData?.data?.id || listingData?.id;
+      let listingId = editId;
+      let newlyAddedImages = form.images.filter((img) => img.file);
 
-      // Step 2: Upload images if any
-      if (form.images.length > 0 && listingId) {
+      if (isEditMode) {
+        await updateItem(editId, payload);
+      } else {
+        const listingData = await createItem(payload);
+        listingId = listingData?.data?.id || listingData?.id;
+        newlyAddedImages = form.images; // all images are new on create
+      }
+
+      // Upload any newly-picked local images
+      if (newlyAddedImages.length > 0 && listingId) {
         try {
           const formData = new FormData();
-          form.images.forEach((img) => formData.append("images", img.file));
+          newlyAddedImages.forEach((img) => formData.append("images", img.file));
           await API.post(`/items/${listingId}/images`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         } catch (imgErr) {
-          console.warn("Image upload failed — listing created without images:", imgErr);
+          console.warn("Image upload failed — listing saved without new images:", imgErr);
         }
       }
 
@@ -157,12 +208,22 @@ export default function ListItem() {
       const msg =
         err?.response?.data?.error?.message ||
         err?.response?.data?.detail ||
-        "Failed to publish listing";
+        `Failed to ${isEditMode ? 'update' : 'publish'} listing`;
       setSubmitError(typeof msg === "string" ? msg : "Something went wrong");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loadingExisting) {
+    return (
+      <div className="list-item page anim-fade-in">
+        <div className="list-item__body">
+          <p>Loading listing…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="list-item page anim-fade-in">
@@ -179,14 +240,17 @@ export default function ListItem() {
               <FiArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="list-item__header-title">List New Item</h1>
-              <p className="list-item__header-sub">Create a marketplace listing</p>
+              <h1 className="list-item__header-title">
+                {isEditMode ? 'Edit Listing' : 'List New Item'}
+              </h1>
+              <p className="list-item__header-sub">
+                {isEditMode ? 'Update your listing details' : 'Create a marketplace listing'}
+              </p>
             </div>
           </div>
           <span className="list-item__progress-badge">{pct}% Complete</span>
         </div>
 
-        {/* Progress bar */}
         <div className="list-item__progress-bar">
           <div
             className="list-item__progress-fill"
@@ -194,7 +258,6 @@ export default function ListItem() {
           />
         </div>
 
-        {/* Step indicators */}
         <div className="list-item__steps">
           {STEP_LABELS.map((label, i) => {
             const num = i + 1;
@@ -212,7 +275,6 @@ export default function ListItem() {
         </div>
       </div>
 
-      {/* ── Step Content ── */}
       <div className="list-item__body">
 
         {submitError && (
@@ -221,7 +283,6 @@ export default function ListItem() {
           </div>
         )}
 
-        {/* STEP 1 — Photos */}
         {step === 1 && (
           <div className="list-item__step-content anim-fade-in">
             <h2 className="list-item__section-title">Add Photos</h2>
@@ -229,7 +290,6 @@ export default function ListItem() {
               Great photos help your item sell faster. Add up to 5 images.
             </p>
 
-            {/* Image Grid */}
             <div className="list-item__image-grid">
               {form.images.map((img, idx) => (
                 <div key={img.id} className="list-item__image-slot list-item__image-slot--filled">
@@ -256,7 +316,7 @@ export default function ListItem() {
                 </button>
               )}
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -272,13 +332,11 @@ export default function ListItem() {
           </div>
         )}
 
-        {/* STEP 2 — Details */}
         {step === 2 && (
           <div className="list-item__step-content anim-fade-in">
             <h2 className="list-item__section-title">Item Details</h2>
 
             <div className="list-item__form">
-              {/* Title */}
               <div className="field-group">
                 <label className="field-label" htmlFor="item-title">Item Title *</label>
                 <input
@@ -293,7 +351,6 @@ export default function ListItem() {
                 {errors.title && <p className="field-error">{errors.title}</p>}
               </div>
 
-              {/* Category */}
               <div className="field-group">
                 <label className="field-label">Category *</label>
                 <div className="list-item__chip-wrap">
@@ -307,7 +364,6 @@ export default function ListItem() {
                 {errors.category && <p className="field-error">{errors.category}</p>}
               </div>
 
-              {/* Condition */}
               <div className="field-group">
                 <label className="field-label">Condition *</label>
                 <div className="list-item__chip-wrap">
@@ -321,7 +377,6 @@ export default function ListItem() {
                 {errors.condition && <p className="field-error">{errors.condition}</p>}
               </div>
 
-              {/* Channel */}
               <div className="field-group">
                 <label className="field-label">Listing Channel</label>
                 <div className="list-item__channel-grid">
@@ -343,7 +398,6 @@ export default function ListItem() {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="field-group">
                 <label className="field-label" htmlFor="item-desc">Description</label>
                 <textarea
@@ -364,7 +418,6 @@ export default function ListItem() {
           </div>
         )}
 
-        {/* STEP 3 — Pricing */}
         {step === 3 && (
           <div className="list-item__step-content anim-fade-in">
             <h2 className="list-item__section-title">Set Your Price</h2>
@@ -397,12 +450,13 @@ export default function ListItem() {
           </div>
         )}
 
-        {/* STEP 4 — Preview */}
         {step === 4 && (
           <div className="list-item__step-content anim-fade-in">
-            <h2 className="list-item__section-title">Preview Your Listing</h2>
+            <h2 className="list-item__section-title">
+              {isEditMode ? 'Review Your Changes' : 'Preview Your Listing'}
+            </h2>
             <p className="list-item__section-desc">
-              Review your listing before publishing.
+              {isEditMode ? 'Review before saving.' : 'Review your listing before publishing.'}
             </p>
 
             <div className="list-item__preview-card card">
@@ -433,14 +487,17 @@ export default function ListItem() {
             </div>
 
             <SecurityCard
-              title="Ready to publish"
-              message="Your listing will be visible to the entire campus community once published."
+              title={isEditMode ? 'Ready to save' : 'Ready to publish'}
+              message={
+                isEditMode
+                  ? 'Your changes will be visible to the campus community immediately.'
+                  : 'Your listing will be visible to the entire campus community once published.'
+              }
               variant="success"
             />
           </div>
         )}
 
-        {/* ── Navigation Buttons ── */}
         <div className="list-item__nav-btns">
           {step > 1 && (
             <button
@@ -467,7 +524,9 @@ export default function ListItem() {
               type="button"
             >
               <FiZap size={16} />
-              {submitting ? 'Publishing...' : 'Publish Listing'}
+              {submitting
+                ? (isEditMode ? 'Saving...' : 'Publishing...')
+                : (isEditMode ? 'Save Changes' : 'Publish Listing')}
             </button>
           )}
         </div>

@@ -130,9 +130,11 @@ class ItemResponse(ItemBase):
     seller_name: Optional[str] = None
     seller_role: Optional[str] = None
     status:     ItemStatus
+    image_url:   Optional[str] = None
+    view_count:  int = 0
     created_at: datetime
     updated_at: datetime
-
+    
     class Config:
         from_attributes = True
 

@@ -188,10 +188,6 @@ const handleTopUp = async () => {
             <div className="wallet__holds">
               {walletData.active_holds.map((hold) => (
                 <div key={hold.purchase_id} className="wallet__hold-card card">
-                  <div className="wallet__hold-banner">
-                    <FiLock size={14} />
-                    <span>Payment secured in campus vault</span>
-                  </div>
                   <div className="wallet__hold-body">
                     <div className="wallet__hold-image-wrap">
                       {hold.image_url
@@ -240,6 +236,7 @@ const handleTopUp = async () => {
             ) : (
               transactions.map((tx) => {
                 const Icon = TX_ICON[tx.transaction_type] ?? FiArrowDownLeft;
+                
                 const isCredit = tx.amount > 0;
                 return (
                   <div key={tx.id} className="wallet__tx-item card">
@@ -257,12 +254,17 @@ const handleTopUp = async () => {
                         <StatusBadge status={tx.paymentStatus || tx.transaction_type} size="sm" />
                       </div>
                     </div>
-                    <p
-                      className="wallet__tx-amount"
-                      style={{ color: isCredit ? 'var(--color-green-text)' : 'var(--color-dark-blue)' }}
-                    >
-                      {isCredit ? '+' : ''}₹{Math.abs(tx.amount).toLocaleString()}
-                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      <p
+                        className="wallet__tx-amount"
+                        style={{ color: isCredit ? 'var(--color-green-text)' : 'var(--color-dark-blue)' }}
+                      >
+                        {isCredit ? '+' : ''}₹{Math.abs(tx.amount).toLocaleString()}
+                      </p>
+                      {tx.item_status && (
+                        <StatusBadge status={tx.item_status} size="sm" />
+                      )}
+                    </div>
                   </div>
                 );
               })

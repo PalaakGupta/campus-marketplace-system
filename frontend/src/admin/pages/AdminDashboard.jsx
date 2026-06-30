@@ -165,7 +165,7 @@ export default function AdminDashboard() {
             )}
 
             {/* ── Hero Strip ── */}
-            <div className="ad-dash-hero">
+             <div className="ad-dash-hero">
                 <div className="ad-dash-hero__block">
                     <div className="ad-dash-hero__label">Total Wallet Balance</div>
                     <div className="ad-dash-hero__value">
@@ -181,6 +181,7 @@ export default function AdminDashboard() {
                         {loading ? "₹—" : fmtCur(totalHeldAmount)}
                     </div>
                 </div>
+            
 
                 <div className="ad-dash-hero__divider" />
 

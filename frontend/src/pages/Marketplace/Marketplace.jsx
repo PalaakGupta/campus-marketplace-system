@@ -172,7 +172,7 @@ export default function Marketplace() {
           <CategoryChips
             categories={CATEGORIES}
             active={activeCategory}
-            onSelect={(val) => { setActiveChannel(val); setPage(1); }}
+            onSelect={(val) => { setActiveCategory(val); setPage(1); }}
           />
         </div>
       </div>

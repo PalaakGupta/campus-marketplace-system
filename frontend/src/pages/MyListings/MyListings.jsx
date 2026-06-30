@@ -161,13 +161,13 @@ export default function MyListings() {
                     <p className="my-listings__price">₹{Number(listing.price).toLocaleString()}</p>
                     <div className="my-listings__meta">
                       <span className="my-listings__meta-item">
-                        <FiEye size={11} /> {listing.view_Count ?? 0}
+                        <FiEye size={11} /> {listing.view_count ?? 0}
                       </span>
                       <span className="my-listings__meta-item">
-                        <FiHeart size={11} /> {listing.saved_Count ?? 0}
+                        <FiHeart size={11} /> {listing.saved_count ?? 0}
                       </span>
                       <span className="my-listings__meta-item">
-                        <FiMessageCircle size={11} /> {listing.message_Count ?? 0}
+                        <FiMessageCircle size={11} /> {listing.message_count ?? 0}
                       </span>
                     </div>
                   </div>

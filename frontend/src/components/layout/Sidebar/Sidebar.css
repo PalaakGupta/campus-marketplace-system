@@ -100,6 +100,33 @@
   height: 18px;
 }
 
+/* Logout */
+.sidebar__logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 8px;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  color: #e53e3e;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sidebar__logout-btn:hover {
+  background: #fff5f5;
+}
+
+.sidebar__logout-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* Promo */
 .sidebar__promo {
   margin: 0 12px 12px;

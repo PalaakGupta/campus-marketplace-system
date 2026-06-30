@@ -42,6 +42,7 @@ export default function Purchases() {
             sellerName: p.seller_name ?? p.sellerName,
             imageUrl: p.image_url ?? p.imageUrl,
             purchasedAt: p.purchased_at ?? p.purchasedAt,
+            holdingRecordId: p.holding_record_id ?? p.holdingRecordId ?? p.id,
           }))
         );
       } catch (err) {
@@ -58,13 +59,15 @@ export default function Purchases() {
       ? purchases
       : purchases.filter((p) => p.paymentStatus === activeTab);
 
-  const handleConfirmDelivery = async (purchaseId) => {
+  const handleConfirmDelivery = async (holdingRecordId) => {
     try {
-      setConfirming(purchaseId);
-      await confirmDelivery(purchaseId);
+      setConfirming(holdingRecordId);
+      await confirmDelivery(holdingRecordId);
       setPurchases((prev) =>
         prev.map((p) =>
-          p.id === purchaseId ? { ...p, payment_status: 'released', paymentStatus: 'released' } : p
+          p.holdingRecordId === holdingRecordId
+            ? { ...p, paymentStatus: 'released' }
+            : p
         )
       );
     } catch (err) {
@@ -134,11 +137,11 @@ export default function Purchases() {
                     <button
                       className="btn btn-sm btn-inline"
                       style={{ background: 'var(--color-green)', color: '#fff', border: 'none' }}
-                      onClick={() => handleConfirmDelivery(purchase.id)}
-                      disabled={confirming === purchase.id}
+                      onClick={() => handleConfirmDelivery(purchase.holdingRecordId)}
+                      disabled={confirming === purchase.holdingRecordId}
                       type="button"
                     >
-                      {confirming === purchase.id ? 'Confirming...' : 'Confirm Receipt'}
+                      {confirming === purchase.holdingRecordId ? 'Confirming...' : 'Confirm Receipt'}
                     </button>
                   </div>
                 )}

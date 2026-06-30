@@ -2,21 +2,28 @@ import { NavLink } from "react-router-dom";
 import {
   FiHome, FiShoppingBag, FiPackage, FiTag,
   FiDollarSign, FiMessageCircle, FiUser, FiShield,
-  FiChevronRight,
+  FiChevronRight,FiLogOut
 } from "react-icons/fi";
+import { useState } from 'react';
+import { logout } from '../../../services/authService';
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
   { to: "/dashboard", icon: FiHome, label: "Dashboard" },
   { to: "/marketplace", icon: FiShoppingBag, label: "Marketplace" },
   { to: "/my-listings", icon: FiPackage, label: "My Listings" },
-  { to: "/purchases", icon: FiTag, label: "Purchases" },
+  { to: "/purchases", icon: FiTag, label: "My Purchases" },
   { to: "/wallet", icon: FiDollarSign, label: "Wallet" },
   { to: "/messages", icon: FiMessageCircle, label: "Messages", badge: true },
-  { to: "/profile", icon: FiUser, label: "Profile" },
 ];
 
 export default function Sidebar({ user, unreadCount = 0 }) {
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = () => {
+    setLoggingOut(true);
+    logout();
+  };
   return (
     <aside className="sidebar">
       {/* Logo */}
@@ -49,6 +56,17 @@ export default function Sidebar({ user, unreadCount = 0 }) {
           </NavLink>
         ))}
       </nav>
+
+      {/* LogOut button */}
+      <button
+        className="sidebar__logout-btn"
+        onClick={handleLogout}
+        disabled={loggingOut}
+        type="button"
+      >
+        <FiLogOut size={18} />
+        <span>{loggingOut ? 'Signing out…' : 'Sign Out'}</span>
+      </button>
 
       {/* Security promo */}
       <div className="sidebar__promo">
