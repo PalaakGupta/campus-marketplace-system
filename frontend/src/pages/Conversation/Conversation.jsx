@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   FiArrowLeft, FiMoreVertical, FiSend,
   FiPaperclip, FiShield,
@@ -7,44 +7,89 @@ import {
 
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import LoadingState from '../../components/ui/LoadingState/LoadingState';
-import { getChatHistory, createChatWebSocket } from '../../services/chatService';
+import {
+  getChatHistory,
+  getConversations,
+  markConversationRead,
+  createChatWebSocket,
+} from '../../services/chatService';
 import './Conversation.css';
 
 export default function Conversation() {
   const { conversationId: id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
+  const pendingSentRef = useRef([]); 
 
-  const [conversation, setConversation] = useState(null);
+  const userId = localStorage.getItem('user_id');
+
+  // Conversation header info: prefer state passed from Messages list,
+  // since the history endpoint only returns raw messages (no metadata).
+  const [conversation, setConversation] = useState(location.state?.conversation ?? null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  // Fetch chat history
+  // Fetch message history
   useEffect(() => {
-    const fetchConversation = async () => {
+    let cancelled = false;
+
+    const fetchHistory = async () => {
       try {
         setLoading(true);
-        const data = await getChatHistory(id);
-        const responseData = data?.data ?? data;
-        setConversation(responseData?.conversation ?? null);
+        const raw = await getChatHistory(id);
+        const list = Array.isArray(raw) ? raw : (raw?.data ?? []);
+
+        if (cancelled) return;
         setMessages(
-          (responseData?.messages ?? []).map(m => ({
-            ...m,
-            text:      m.content ?? m.text,
-            fromMe:    m.is_from_me ?? false,
-            timestamp: m.created_at ?? m.timestamp,
+          list.map((m) => ({
+            id: m.id,
+            text: m.content,
+            fromMe: String(m.sender_id) === String(userId),
+            timestamp: m.created_at,
+            status: 'sent',
           }))
         );
       } catch (err) {
         console.error('Conversation fetch error:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchConversation();
+
+    fetchHistory();
+    return () => { cancelled = true; };
+  }, [id, userId]);
+
+  useEffect(() => {
+    if (conversation) return;
+    let cancelled = false;
+
+    const recoverConversation = async () => {
+      try {
+        const data = await getConversations();
+        const list = data?.data ?? data?.conversations ?? data ?? [];
+        const found = (Array.isArray(list) ? list : []).find(
+          (c) => String(c.id) === String(id)
+        );
+        if (!cancelled && found) setConversation(found);
+      } catch (err) {
+        console.error('Conversation recovery error:', err);
+      }
+    };
+
+    recoverConversation();
+    return () => { cancelled = true; };
+  }, [conversation, id]);
+
+  // Mark as read on open
+  useEffect(() => {
+    markConversationRead(id).catch((err) =>
+      console.error('Mark read error:', err)
+    );
   }, [id]);
 
   // Scroll to bottom on new messages
@@ -56,37 +101,57 @@ export default function Conversation() {
   useEffect(() => {
     const ws = createChatWebSocket(id);
 
-    ws.onopen  = () => console.log("WS Connected!");
-    ws.onerror = (e) => console.log("WS Error:", e);
-    ws.onclose = (e) => console.log("WS Closed:", e.code, e.reason);
+    ws.onopen  = () => console.log('WS Connected!');
+    ws.onerror = (e) => console.log('WS Error:', e);
+    ws.onclose = (e) => console.log('WS Closed:', e.code, e.reason);
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      setMessages(prev => [
-        ...prev,
-        {
-          id:        msg.message_id,
-          text:      msg.content,
-          fromMe:    msg.sender_id === localStorage.getItem("user_id"),
-          timestamp: msg.created_at,
+      const isMine = String(msg.sender_id) === String(userId);
+
+      setMessages((prev) => {
+        if (isMine) {
+          const pendingIdx = pendingSentRef.current.findIndex(
+            (p) => p.text === msg.content
+          );
+          if (pendingIdx !== -1) {
+            const { tempId } = pendingSentRef.current[pendingIdx];
+            pendingSentRef.current.splice(pendingIdx, 1);
+            return prev.map((m) =>
+              m.id === tempId
+                ? { ...m, id: msg.message_id, timestamp: msg.created_at, status: 'sent' }
+                : m
+            );
+          }
         }
-      ]);
+        return [
+          ...prev,
+          {
+            id: msg.message_id,
+            text: msg.content,
+            fromMe: isMine,
+            timestamp: msg.created_at,
+            status: 'sent',
+          },
+        ];
+      });
     };
 
     wsRef.current = ws;
     return () => ws.close();
-  }, [id]);
+  }, [id, userId]);
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
 
+    const tempId = `temp-${Date.now()}`;
     const optimistic = {
-      id:        `temp-${Date.now()}`,
+      id: tempId,
       text,
-      fromMe:    true,
+      fromMe: true,
       timestamp: new Date().toISOString(),
-      status:    'sending',
+      status: 'sending',
     };
 
     setMessages((prev) => [...prev, optimistic]);
@@ -95,16 +160,14 @@ export default function Conversation() {
     try {
       setSending(true);
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        pendingSentRef.current.push({ tempId, text });
         wsRef.current.send(text);
-        setMessages((prev) =>
-          prev.map((m) => m.id === optimistic.id ? { ...m, status: 'sent' } : m)
-        );
       } else {
-        throw new Error("WebSocket not connected");
+        throw new Error('WebSocket not connected');
       }
     } catch (err) {
       setMessages((prev) =>
-        prev.map((m) => m.id === optimistic.id ? { ...m, status: 'failed' } : m)
+        prev.map((m) => (m.id === tempId ? { ...m, status: 'failed' } : m))
       );
       console.error('Send message error:', err);
     } finally {
@@ -152,13 +215,15 @@ export default function Conversation() {
         <div className="conversation__user-info">
           <div className="conversation__avatar-wrap">
             <div className="avatar avatar-sm">
-              {conversation?.withName?.charAt(0) ?? '?'}
+              {conversation?.withName?.charAt(0)?.toUpperCase() ?? '?'}
             </div>
             {conversation?.online && <span className="conversation__online-dot" />}
           </div>
           <div>
-            <p className="conversation__name">{conversation?.withName ?? '—'}</p>
-            <p className="conversation__role">{conversation?.withRole}</p>
+            <p className="conversation__name">{conversation?.withName ?? 'Unknown'}</p>
+            {conversation?.withRole && (
+              <p className="conversation__role">{conversation.withRole}</p>
+            )}
           </div>
         </div>
 
@@ -168,26 +233,17 @@ export default function Conversation() {
       </div>
 
       {/* ── Listing Preview ── */}
-      {conversation?.listing && (
+      {conversation?.listingTitle && (
         <div
           className="conversation__listing-preview"
-          onClick={() => navigate(`/item/${conversation.listing.id}`)}
+          onClick={() => navigate(`/item/${id}`)}
         >
           <div className="conversation__listing-image-wrap">
-            {conversation.listing.imageUrl
-              ? <img src={conversation.listing.imageUrl}
-                  alt={conversation.listing.title}
-                  className="conversation__listing-image" />
-              : <div className="conversation__listing-image-placeholder" />
-            }
+            <div className="conversation__listing-image-placeholder" />
           </div>
           <div className="conversation__listing-info">
-            <p className="conversation__listing-title">{conversation.listing.title}</p>
-            <p className="conversation__listing-price">
-              ₹{Number(conversation.listing.price).toLocaleString()}
-            </p>
+            <p className="conversation__listing-title">{conversation.listingTitle}</p>
           </div>
-          <StatusBadge status={conversation.listing.status} size="sm" />
         </div>
       )}
 

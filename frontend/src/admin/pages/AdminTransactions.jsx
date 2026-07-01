@@ -1,24 +1,39 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-    FiDollarSign, FiShoppingBag, FiLock,
-    FiCheckCircle, FiRefreshCw,
+    FiDollarSign, FiShoppingBag,
+    FiCheckCircle, FiRefreshCw, FiCornerUpLeft,
 } from "react-icons/fi";
 import AdminLayout from "../components/AdminLayout";
 import { AdminTable, AdminPagination } from "../components/AdminTable";
 import AdminBadge from "../components/AdminBadge";
 import { useToast, ToastContainer } from "../components/AdminToast";
-import { fetchPurchases, fetchHoldings, fetchWalletTx } from "../services/adminApi";
+import { fetchHoldings, fetchWalletTx, issueRefund } from "../services/adminApi";
 
+// Purchases and Vault Holdings were two tabs showing the same underlying
+// rows (item / buyer / seller / amount / status) — Holdings is a strict
+// superset (it adds released_at). Merged into a single "Purchases & Holdings"
+// tab. Wallet Ledger stays separate since it's the only place with the full
+// money-movement audit trail (separate Purchase + Release line entries).
 const TABS = [
-    { id: "purchases", label: "Purchases", icon: FiShoppingBag, color: "#818cf8" },
-    { id: "holdings", label: "Vault Holdings", icon: FiLock, color: "#fbbf24" },
+    { id: "purchases", label: "Purchases & Holdings", icon: FiShoppingBag, color: "#818cf8" },
     { id: "wallet_tx", label: "Wallet Ledger", icon: FiDollarSign, color: "#34d399" },
 ];
 const PAGE_SIZE = 20;
 
-const HOLD_STATUSES = ["all", "holding", "released", "refunded"];
 const TX_TYPES = ["all", "purchase", "release", "refund"];
 const PURCH_STATUSES = ["all", "holding", "released", "refunded"];
+
+// ── Shared cell renderers (previously duplicated 3-5x across column defs) ──
+const fmtDate = (v) => (v ? new Date(v).toLocaleDateString() : "—");
+const fmtAmount = (v) => `₹${Number(v ?? 0).toLocaleString()}`;
+const IdCell = (v) => <code style={{ fontSize: 12 }}>{v}</code>;
+const TitleCell = (v) => <span style={{ fontWeight: 600 }}>{v || "—"}</span>;
+const StatusCell = (v) => <AdminBadge value={v} />;
+
+const formatFilterLabel = (tab, value) => {
+    if (value === "all") return tab === "wallet_tx" ? "All Types" : "All Statuses";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+};
 
 export default function AdminTransactions() {
     const { toasts, toast, dismiss } = useToast();
@@ -37,17 +52,22 @@ export default function AdminTransactions() {
             const params = { page: pg, pageSize: PAGE_SIZE };
             if (f !== "all") params.status = f;
 
+            // "purchases" tab now uses fetchHoldings — it's a superset of
+            // fetchPurchases (same fields + released_at), so one call covers
+            // both the order view and the vault lifecycle view.
             let data;
-            if (tab === "purchases") data = await fetchPurchases(params);
-            if (tab === "holdings") data = await fetchHoldings({ ...params, status: f });
+            if (tab === "purchases") data = await fetchHoldings(params);
             if (tab === "wallet_tx") {
                 if (f !== "all") { delete params.status; params.type = f; }
                 data = await fetchWalletTx(params);
             }
 
-            const key = tab === "purchases" ? "purchases"
-                : tab === "holdings" ? "holdings"
-                    : "transactions";
+            // NOTE: /admin/holding-transactions calls the exact same backend
+            // service (admin_list_purchases) as /admin/purchases, so it
+            // returns the same response shape — key is "purchases", not
+            // "holdings". Reading data.holdings here was always undefined,
+            // which is why Total Records showed 0 regardless of filter.
+            const key = tab === "purchases" ? "purchases" : "transactions";
             setRows(data?.[key] || []);
             setTotal(data?.total || 0);
             setHasMore(data?.has_more ?? false);
@@ -56,76 +76,65 @@ export default function AdminTransactions() {
         finally { setLoading(false); }
     }, [tab, filter, toast]);
 
+    // Tab switch only resets the filter. The filter effect below is the
+    // single place that actually triggers a fetch, so switching tabs no
+    // longer fires two back-to-back requests.
     useEffect(() => {
         setFilter("all");
-        load(1, "all");
     }, [tab]);
 
-    useEffect(() => { load(1, filter); }, [filter]);
+    useEffect(() => {
+        load(1, filter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filter, tab]);
 
-    // ── Column definitions ──────────────────────────
+    const handleRefund = async (row) => {
+        const reason = window.prompt(`Refund reason for "${row.item_title || "this item"}"?`);
+        if (!reason) return;
+        try {
+            await issueRefund(row.id, reason);
+            toast("Refund issued.", "success");
+            load(page, filter);
+        } catch {
+            toast("Failed to issue refund.", "error");
+        }
+    };
+
+    // ── Column definitions (Purchases + Holdings merged) ────────────
     const PURCH_COLS = [
+        { key: "item_title", label: "Item", render: TitleCell },
+        { key: "buyer_login_id", label: "Buyer", render: IdCell },
+        { key: "seller_login_id", label: "Seller", render: IdCell },
+        { key: "amount", label: "Amount", render: fmtAmount },
+        { key: "status", label: "Status", render: StatusCell },
+        { key: "created_at", label: "Purchased", render: fmtDate },
+        { key: "released_at", label: "Released", render: fmtDate },
         {
-            key: "item_title", label: "Item",
-            render: (v) => <span style={{ fontWeight: 600 }}>{v || "—"}</span>
+            key: "_actions", label: "",
+            render: (_v, row) => row.status === "holding" ? (
+                <button
+                    className="ad-page-btn"
+                    title="Issue refund"
+                    onClick={() => handleRefund(row)}
+                    style={{ display: "flex", alignItems: "center", gap: 4 }}
+                >
+                    <FiCornerUpLeft size={13} /> Refund
+                </button>
+            ) : null,
         },
-        {
-            key: "buyer_login_id", label: "Buyer ID",
-            render: (v) => <code style={{ fontSize: 12 }}>{v}</code>
-        },
-        {
-            key: "seller_login_id", label: "Seller ID",
-            render: (v) => <code style={{ fontSize: 12 }}>{v}</code>
-        },
-        {
-            key: "amount", label: "Amount",
-            render: (v) => `₹${Number(v ?? 0).toLocaleString()}`
-        },
-        { key: "status", label: "Status", render: (v) => <AdminBadge value={v} /> },
-        {
-            key: "created_at", label: "Date",
-            render: (v) => v ? new Date(v).toLocaleDateString() : "—"
-        },
-    ];
-
-    const HOLD_COLS = [
-        {
-            key: "item_title", label: "Item",
-            render: (v) => <span style={{ fontWeight: 600 }}>{v || "—"}</span>
-        },
-        {
-            key: "buyer_login_id", label: "Buyer",
-            render: (v) => <code style={{ fontSize: 12 }}>{v}</code>
-        },
-        {
-            key: "seller_login_id", label: "Seller",
-            render: (v) => <code style={{ fontSize: 12 }}>{v}</code>
-        },
-        {
-            key: "amount", label: "Held Amount",
-            render: (v) => `₹${Number(v ?? 0).toLocaleString()}`
-        },
-        { key: "status", label: "Status", render: (v) => <AdminBadge value={v} /> },
-        { key: "created_at", label: "Created", render: (v) => v ? new Date(v).toLocaleDateString() : "—" },
-        { key: "released_at", label: "Released", render: (v) => v ? new Date(v).toLocaleDateString() : "—" },
     ];
 
     const TX_COLS = [
-        { key: "item_title", label: "Item" },
-        { key: "from_login_id", label: "From", render: (v) => <code style={{ fontSize: 12 }}>{v}</code> },
-        { key: "to_login_id", label: "To", render: (v) => <code style={{ fontSize: 12 }}>{v}</code> },
-        { key: "amount", label: "Amount", render: (v) => `₹${Number(v ?? 0).toLocaleString()}` },
-        { key: "transaction_type", label: "Type", render: (v) => <AdminBadge value={v} /> },
-        { key: "created_at", label: "Date", render: (v) => v ? new Date(v).toLocaleDateString() : "—" },
+        { key: "item_title", label: "Item", render: TitleCell },
+        { key: "from_login_id", label: "From", render: IdCell },
+        { key: "to_login_id", label: "To", render: IdCell },
+        { key: "amount", label: "Amount", render: fmtAmount },
+        { key: "transaction_type", label: "Type", render: StatusCell },
+        { key: "created_at", label: "Date", render: fmtDate },
     ];
 
-    const cols = tab === "purchases" ? PURCH_COLS
-        : tab === "holdings" ? HOLD_COLS
-            : TX_COLS;
-
-    const filterOpts = tab === "purchases" ? PURCH_STATUSES
-        : tab === "holdings" ? HOLD_STATUSES
-            : TX_TYPES;
+    const cols = tab === "purchases" ? PURCH_COLS : TX_COLS;
+    const filterOpts = tab === "purchases" ? PURCH_STATUSES : TX_TYPES;
 
     return (
         <AdminLayout title="Transactions" subtitle="Financial records and vault holdings">
@@ -170,8 +179,7 @@ export default function AdminTransactions() {
                             onChange={(e) => setFilter(e.target.value)}>
                             {filterOpts.map((o) => (
                                 <option key={o} value={o}>
-                                    {o === "all" ? (tab === "wallet_tx" ? "All Types" : "All Statuses")
-                                        : o.charAt(0).toUpperCase() + o.slice(1)}
+                                    {formatFilterLabel(tab, o)}
                                 </option>
                             ))}
                         </select>
@@ -187,3 +195,4 @@ export default function AdminTransactions() {
         </AdminLayout>
     );
 }
+

@@ -27,9 +27,9 @@ export default function AdminApp() {
       <Route path="transactions" element={
         <AdminProtectedRoute><AdminTransactions /></AdminProtectedRoute>
       } />
-      <Route path="reports" element={
+      {/*<Route path="reports" element={
         <AdminProtectedRoute><AdminReports /></AdminProtectedRoute>
-      } />
+      } />*/}
 
       {/* Default */}
       <Route path="*" element={<Navigate to="dashboard" replace />} />

@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   FiShield, FiHome, FiUsers, FiPackage,
-  FiDollarSign, FiFlag, FiLogOut, FiActivity,
+  FiDollarSign, FiFlag, FiLogOut,
 } from "react-icons/fi";
 
 const NAV = [
@@ -14,18 +14,12 @@ const NAV = [
       { to: "/admin/transactions", icon: FiDollarSign, label: "Transactions",  iconColor: "var(--ad-amber)"  },
     ],
   },
-  {
-    section: "Support",
-    items: [
-      { to: "/admin/reports", icon: FiFlag, label: "Reports & Support", iconColor: "var(--ad-red)", badge: true },
-    ],
-  },
-  {
-    section: "System",
-    items: [
-      { to: "/admin/activity", icon: FiActivity, label: "Activity Logs", iconColor: "var(--ad-purple)" },
-    ],
-  },
+  //{
+   // section: "Support",
+   // items: [
+    //  { to: "/admin/reports", icon: FiFlag, label: "Reports & Support", iconColor: "var(--ad-red)", badge: true },
+    //],
+  //},
 ];
 
 export default function AdminSidebar({ open, onClose, unreadReports, admin, initials }) {

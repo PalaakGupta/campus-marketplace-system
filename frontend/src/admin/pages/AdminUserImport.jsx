@@ -77,7 +77,7 @@ Fatima Ibrahim,MBA2022012,fatima.ibrahim@campus.edu,Business Administration,2001
 Kofi Asante,CS2019003,kofi.asante@campus.edu,Computer Science,1995-06-10,lab_staff`;
 
 /* ── History table columns ────────────────────────── */
-const HIST_COLS = [
+{/*const HIST_COLS = [
   {
     key: "created_at",
     label: "Date",
@@ -93,7 +93,7 @@ const HIST_COLS = [
     render: (v) => <AdminBadge value={v} />,
   },
   { key: "admin_name",     label: "Imported By"  },
-];
+];*/}
 
 /* ── Component ────────────────────────────────────── */
 export default function AdminUserImport() {
@@ -107,13 +107,13 @@ export default function AdminUserImport() {
   const [preview,   setPreview]   = useState(null);
   const [fileName,  setFileName]  = useState("");
 
-  const [history,     setHistory]     = useState([]);
+  {/*const [history,     setHistory]     = useState([]);
   const [histTotal,   setHistTotal]   = useState(0);
   const [histPage,    setHistPage]    = useState(1);
-  const [histLoading, setHistLoading] = useState(false);
+  const [histLoading, setHistLoading] = useState(false);*/}
 
   /* ── Load import history ── */
-  const loadHistory = useCallback(async (pg = 1) => {
+  {/*const loadHistory = useCallback(async (pg = 1) => {
     try {
       setHistLoading(true);
       const data = await fetchImportHistory({ page: pg, pageSize: 10 });
@@ -126,7 +126,7 @@ export default function AdminUserImport() {
     } finally {
       setHistLoading(false);
     }
-  }, [toast]);
+  }, [toast]);*/}
 
   /* ── Handle file pick/drop ── */
   const handleFile = async (file) => {
@@ -171,8 +171,8 @@ export default function AdminUserImport() {
       toast(`${count} user(s) imported successfully.`, "success");
       setPreview(null);
       setFileName("");
-      setTab("history");
-      loadHistory(1);
+     // setTab("history");
+      //loadHistory(1);
     } catch (err) {
       toast(
         err?.response?.data?.data?.message ||
@@ -239,14 +239,14 @@ export default function AdminUserImport() {
       <div className="ad-tabs">
         {[
           { id: "upload",  label: "Upload & Import" },
-          { id: "history", label: "Import History"  },
+          //{ id: "history", label: "Import History"  },
         ].map((t) => (
           <button
             key={t.id}
             className={`ad-tab ${tab === t.id ? "active" : ""}`}
             onClick={() => {
               setTab(t.id);
-              if (t.id === "history") loadHistory(1);
+              // if (t.id === "history") loadHistory(1);
             }}
           >
             {t.label}
@@ -451,7 +451,7 @@ export default function AdminUserImport() {
       )}
 
       {/* ══ HISTORY TAB ══════════════════════════════════════════════════ */}
-      {tab === "history" && (
+      {/* {tab === "history" && (
         <div className="ad-card">
           <div className="ad-card__header">
             <div className="ad-card__title">
@@ -474,7 +474,7 @@ export default function AdminUserImport() {
             onPage={(pg) => loadHistory(pg)}
           />
         </div>
-      )}
+      )}*/}
     </AdminLayout>
   );
 }

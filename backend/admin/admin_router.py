@@ -78,13 +78,15 @@ async def preview_user_import(
         else:
             invalid += 1
         rows.append({
-            "row_number": i,
-            "name":       row.get("name", "").strip(),
-            "login_id":   row.get("login_id", "").strip(),
-            "email":      row.get("email", "").strip(),
-            "department": row.get("department", "").strip(),
-            "is_valid":   is_valid,
-            "error":      None if is_valid else "Missing required fields (name, login_id, email)"
+            "row_number":    i,
+            "name":          row.get("name", "").strip(),
+            "login_id":      row.get("login_id", "").strip(),
+            "email":         row.get("email", "").strip(),
+            "department":    row.get("department", "").strip(),
+            "date_of_birth": row.get("date_of_birth", "").strip(),   # ← add
+            "role":          row.get("role", "").strip(),             # ← add
+            "is_valid":      is_valid,
+            "error":         None if is_valid else "Missing required fields (name, login_id, email)"
         })
 
     return success({

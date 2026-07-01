@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-    FiUsers, FiPackage, FiTag, FiDollarSign, FiLock,
+    FiUsers, FiPackage, FiTag, FiLock,
     FiFlag, FiUserPlus, FiAlertTriangle,
-    FiShoppingBag, FiCheckCircle, FiClock, FiMessageSquare,
-    FiRefreshCw, FiTrendingUp,
+    FiShoppingBag, FiCheckCircle, FiMessageSquare,
+    FiRefreshCw,
 } from "react-icons/fi";
 import AdminLayout from "../components/AdminLayout";
 import AdminStatCard from "../components/AdminStatCard";
@@ -20,11 +20,6 @@ const fmtCur = (n) => {
     return isNaN(num) ? "₹0" : `₹${num.toLocaleString()}`;
 };
 
-/**
- * Safely resolve a stat value from multiple possible backend key names.
- * This fixes "counts not displaying" when backend uses different field names
- * than what the original code expected.
- */
 const pick = (obj, ...keys) => {
     if (!obj) return undefined;
     for (const k of keys) {
@@ -130,8 +125,6 @@ export default function AdminDashboard() {
     const soldListings = pick(s, "sold_listings", "total_sold", "sold_items", "sold_count");
     const totalPurchases = pick(s, "total_purchases", "purchases_count", "purchase_count");
     const activeVaultHoldings = pick(s, "active_vault_holdings", "vault_holdings_count", "vault_count", "holding_count");
-    const totalHeldAmount = pick(s, "total_held_amount", "held_amount", "vault_balance");
-    const totalWalletBalance = pick(s, "total_wallet_balance", "wallet_balance", "total_balance");
     const openReports = pick(s, "open_reports", "pending_reports", "reports_pending");
     const openSupport = pick(s, "open_support_requests", "pending_support", "support_open", "support_pending");
 
@@ -164,51 +157,22 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* ── Hero Strip ── */}
-             <div className="ad-dash-hero">
-                <div className="ad-dash-hero__block">
-                    <div className="ad-dash-hero__label">Total Wallet Balance</div>
-                    <div className="ad-dash-hero__value">
-                        {loading ? "₹—" : fmtCur(totalWalletBalance)}
-                    </div>
-                </div>
-
-                <div className="ad-dash-hero__divider" />
-
-                <div className="ad-dash-hero__block">
-                    <div className="ad-dash-hero__label">Active Vault Holdings</div>
-                    <div className="ad-dash-hero__value ad-dash-hero__value--indigo">
-                        {loading ? "₹—" : fmtCur(totalHeldAmount)}
-                    </div>
-                </div>
-            
-
-                <div className="ad-dash-hero__divider" />
-
-                <div className="ad-dash-hero__block">
-                    <div className="ad-dash-hero__label">Total Purchases</div>
-                    <div className="ad-dash-hero__value ad-dash-hero__value--green">
-                        {loading ? "—" : fmtNum(totalPurchases)}
-                    </div>
-                </div>
-
-                {/* Push refresh to the right */}
-                <div style={{ marginLeft: "auto" }}>
-                    <button
-                        className="ad-btn ad-btn--outline ad-btn--sm"
-                        onClick={loadDashboard}
-                        disabled={loading}
-                    >
-                        <FiRefreshCw
-                            size={12}
-                            style={{ animation: loading ? "spin 1s linear infinite" : "none" }}
-                        />
-                        {lastRefreshed
-                            ? `Updated ${lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                            : "Refresh"
-                        }
-                    </button>
-                </div>
+            {/* ── Refresh Button ── */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginBottom: 10 }}>
+                <button
+                    className="ad-btn ad-btn--outline ad-btn--sm"
+                    onClick={loadDashboard}
+                    disabled={loading}
+                >
+                    <FiRefreshCw
+                        size={12}
+                        style={{ animation: loading ? "spin 1s linear infinite" : "none" }}
+                    />
+                    {lastRefreshed
+                        ? `Updated ${lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                        : "Refresh"
+                    }
+                </button>
             </div>
 
             {/* ── Stats Grid ── */}
@@ -247,13 +211,6 @@ export default function AdminDashboard() {
                         label="Vault Holdings"
                         value={fmtNum(activeVaultHoldings)}
                         theme="amber"
-                        sub={totalHeldAmount !== undefined ? fmtCur(totalHeldAmount) : undefined}
-                    />
-                    <AdminStatCard
-                        icon={FiDollarSign}
-                        label="Wallet Balance"
-                        value={fmtCur(totalWalletBalance)}
-                        theme="teal"
                     />
                     <AdminStatCard
                         icon={FiFlag}
@@ -273,6 +230,7 @@ export default function AdminDashboard() {
             )}
 
             {/* ── Recent Activity ── */}
+            {/*}
             <div className="ad-card">
                 <div className="ad-card__header">
                     <div className="ad-card__title">
@@ -309,7 +267,7 @@ export default function AdminDashboard() {
                         ))}
                     </div>
                 )}
-            </div>
+            </div>       */}
 
             {/* Spin keyframe for inline refresh icon */}
             <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>

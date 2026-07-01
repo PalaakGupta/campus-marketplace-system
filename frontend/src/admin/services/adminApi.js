@@ -68,6 +68,9 @@ export const fetchImportHistory = (params = {}) =>
 export const fetchListings = (params = {}) =>
   adminAPI.get("/admin/items", { params }).then(u);
 
+export const fetchItemDetail = (id) =>
+  adminAPI.get(`/admin/items/${id}`).then(u);
+
 export const removeListing = (id) =>
   adminAPI.delete(`/admin/items/${id}`).then(u);
 
@@ -77,12 +80,14 @@ export const restoreListing = (id) =>
 export const flagListing = (id) =>
   adminAPI.patch(`/admin/items/${id}/flag`).then(u);
 
-// ── Transactions ──────────────────────────────────
 export const fetchPurchases = (params = {}) =>
   adminAPI.get("/admin/purchases", { params }).then(u);
 
 export const fetchHoldings = (params = {}) =>
   adminAPI.get("/admin/holding-transactions", { params }).then(u);
+
+export const issueRefund = (holdingId, reason) =>
+  adminAPI.post(`/admin/holding-transactions/${holdingId}/refund`, { reason }).then(u);
 
 export const fetchWalletTx = (params = {}) =>
   adminAPI.get("/admin/wallet-transactions", { params }).then(u);
